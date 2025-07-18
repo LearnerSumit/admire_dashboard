@@ -1,3 +1,5 @@
+const BASE_URI = import.meta.env.VITE_API_BASE_URL;
+
 export const ENV = {
-    API_BASE_URL:'http://192.168.68.118:5000',
+    API_BASE_URL:BASE_URI,
 }

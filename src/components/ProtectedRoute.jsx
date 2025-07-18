@@ -1,29 +1,34 @@
+// src/components/ProtectedRoute.jsx
 import { Navigate, Outlet } from "react-router-dom";
 import useAuthStore from "../stores/authStore";
-import { useEffect, useState } from "react";
+
+// You can create a more elaborate loading spinner component
+const LoadingScreen = () => (
+  <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>
+    <h1>Loading...</h1>
+  </div>
+);
 
 const ProtectedRoute = ({ allowedRoles }) => {
-  const { isLoggedIn, role, loading } = useAuthStore();
-  const [authChecked, setAuthChecked] = useState(false);
+  const { isLoggedIn, role, authChecked } = useAuthStore();
 
-  useEffect(() => {
-    // Assume auth is already validated when Zustand state updates
-    if (!loading) {
-      setAuthChecked(true);
-    }
-  }, [loading]);
+  // 1. If we are still waiting for the initial auth check to complete, show a loading screen.
+  // This is the most important part of the fix.
+  if (!authChecked) {
+    return <LoadingScreen />;
+  }
 
-  // If not logged in, redirect to login
+  // 2. Once the check is done, if the user is not logged in, redirect them.
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
 
-  // If user's role isn't allowed
+  // 3. If the route requires specific roles and the user doesn't have one, redirect.
   if (allowedRoles && !allowedRoles.includes(role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  // User is authenticated and authorized
+  // 4. If all checks pass, render the protected content.
   return <Outlet />;
 };
 

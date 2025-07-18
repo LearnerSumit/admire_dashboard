@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { MapPin, Globe, Loader2 } from "lucide-react";
 import { ENV } from "../../constants/api";
+import { apiClient } from "../../stores/authStore";
 
 const CreateDestination = () => {
     const [data, setData] = useState({
@@ -27,7 +28,7 @@ const CreateDestination = () => {
 
         setIsLoading(true);
         try {
-            const result = await axios.post(`${ENV.API_BASE_URL}/admin/destination`, data);
+            const result = await apiClient.post("/admin/new-destination", data);
             toast.success(`Destination "${data.destination_name}" created successfully!`);
             console.log(result);
             // Reset form after successful submission

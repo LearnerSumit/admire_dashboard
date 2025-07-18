@@ -1,4 +1,4 @@
-import { ChartColumn, CirclePlus, ClipboardList, Images,MapPin, UserPlus } from "lucide-react";
+import { Ban, ChartColumn, CirclePlus, ClipboardList, CreditCard, FileText, Images, MapPin, UserPlus } from "lucide-react";
 
 import ProfileImage from "@/assets/profile-image.jpg";
 import ProductImage from "@/assets/product-image.jpg";
@@ -23,21 +23,44 @@ export const navbarLinks = [
                 path: "/itinerary_list",
             },
             {
-                label:"Image Gallery",
-                icon:Images,
-                path:"image_gallery"
+                label: "Image Gallery",
+                icon: Images,
+                path: "image_gallery"
             },
             {
-                label:"Create Destination",
-                icon:MapPin,
-                path:"create_destination"
+                label: "Customer Gallery",
+                icon: Images,
+                path: "customer_gallery"
             },
             {
-                label:"Add User",
-                icon:UserPlus,
-                path:"add_user"
+                label: "Create Destination",
+                icon: MapPin,
+                path: "create_destination"
+            },
+            {
+                label: "Add User",
+                icon: UserPlus,
+                path: "add_user"
             }
-            
+            ,
+            {
+                label: "Terms and Conditions",
+                icon: FileText,
+                path: "terms_and_conditions"
+            }
+            ,
+            {
+                label: "Payment Mode",
+                icon: CreditCard,
+                path: "payment_mode"
+            }
+            ,
+            {
+                label: "Cancellation Policy",
+                icon: Ban,
+                path: "cancellation_policy"
+            }
+
         ],
     },
 ];

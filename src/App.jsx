@@ -10,12 +10,24 @@ import LoginPage from "./loginPage/page";
 import UnauthorizedPage from "./unauthorizedPage/page";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AddUser from "./routes/addUser/page";
+import { useEffect } from "react";
+import useAuthStore from "./stores/authStore";
+import CustomerGallery from "./routes/customer_gallery/page";
+import TermsAndCondition from "./routes/termsandcondition/page";
+import PaymentMode from "./routes/paymentmode/page";
+import CencellationMode from "./routes/cancellationpolicy/page";
 
 
 // It's good practice to have placeholder pages for login, unauthorized, etc.
 
 
 function App() {
+
+    const checkAuthOnLoad = useAuthStore((state) => state.checkAuthOnLoad);
+
+    useEffect(() => {
+        checkAuthOnLoad();
+    }, [checkAuthOnLoad]);
     const router = createBrowserRouter([
         {
             // Public routes that do not require authentication
@@ -51,6 +63,23 @@ function App() {
                             element: <ImageGallery />,
                         },
                         {
+                            path: "customer_gallery",
+                            element: <CustomerGallery />,
+                        },
+                        {
+                            path: "terms_and_conditions",
+                            element: <TermsAndCondition />,
+                        },
+                        {
+                            path: "payment_mode",
+                            element: <PaymentMode />,
+                        },
+                        {
+                            path: "cancellation_policy",
+                            element: <CencellationMode />,
+                        },
+
+                        {
                             // This nested route has specific role-based protection
                             element: <ProtectedRoute allowedRoles={['admin']} />,
                             children: [
@@ -60,7 +89,7 @@ function App() {
                                 },
                                 {
                                     path: "add_user",
-                                    element: <AddUser/>,
+                                    element: <AddUser />,
                                 },
                             ]
                         }
