@@ -76,10 +76,3 @@ npm install
 npm run dev
 ```
 
-**\*\*_This project uses [Vite](https://vitejs.dev)._**
-
-## <a name="support-me">☕ Support Me</a>
-
-[![ko-fi](https://img.shields.io/static/v1?message=Support%20me%20on%20ko-fi&logo=kofi&label=&color=ff5e5b&logoColor=white&labelColor=&style=for-the-badge)](https://ko-fi.com/J3J1NMYT7)
-
-[![youtube](https://img.shields.io/static/v1?message=Subscribe&logo=youtube&label=&color=FF0000&logoColor=white&labelColor=&style=for-the-badge)](https://www.youtube.com/@_xdcode_ "XD Code")
