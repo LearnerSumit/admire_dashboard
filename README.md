@@ -4,8 +4,6 @@
 2. [🛠️ Tools](#tools)
 3. [✨ Features](#features)
 4. [🚀 Getting Started](#getting-started)
-5. [💻 Code Snippets](#code-snippets)
-6. [☕ Support Me](#support-me)
 
 ## <a name="introduction">💬 Introduction</a>
 
