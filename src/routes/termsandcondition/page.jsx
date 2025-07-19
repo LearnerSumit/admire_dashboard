@@ -1,88 +1,89 @@
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { usePlaceStore } from "../../stores/usePlaceStore"; // Correctly import the store
+import { usePlaceStore } from "../../stores/usePlaceStore";
 import { Loader2, FileText, Edit, Save, MapPin } from "lucide-react";
 
-// --- DUMMY DATA FOR CONTENT ---
-// This part remains to manage the content of the selected item locally.
-const allDummyContent = {
-  'dom1': { content: 'These are the general terms and conditions for all domestic travel packages. Please read them carefully before booking.' },
-  'dom2': { content: 'This is the official booking policy for all domestic packages. It includes details on payment schedules and confirmations.' },
-  'int1': { content: 'These are the general terms and conditions for our international destinations. They cover important aspects of your travel.' },
-  'int2': { content: 'This document contains crucial information regarding visa requirements for various international travel destinations.' }
-};
-// --- END OF DUMMY DATA ---
-
-
 const TermsAndCondition = () => {
-  // Local state for the component
+  // --- Local state for UI control ---
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [travelType, setTravelType] = useState("domestic");
-  const [selectedPlaceId, setSelectedPlaceId] = useState("");
+  
+  // highlight-start
+  // State now holds the destination NAME, not the ID
+  const [selectedPlaceName, setSelectedPlaceName] = useState("");
+  // highlight-end
+  
+  // Local state for the text area, synced with the store's content
   const [textContent, setTextContent] = useState("");
 
-  // Get state and actions from the Zustand store
-  const { galleryPlaces, fetchGalleryPlaces,termsList,fetchTermsList, isListLoading } = usePlaceStore();
+  // --- Get state and actions from the Zustand store ---
+  const {
+    destinationList,
+    isListLoading,
+    currentTermsContent,
+    isContentLoading,
+    fetchDestinationList,
+    fetchTermsContent,
+    updateTermsContent
+  } = usePlaceStore();
 
-  // Effect to fetch places when the travel type changes
+
+  // Effect to fetch the destination list ONLY when travelType changes
   useEffect(() => {
-    // Call the action from the store to fetch the list of places
-    fetchTermsList(travelType);
-  }, [termsList, fetchTermsList]);
+    fetchDestinationList(travelType);
+  }, [travelType, fetchDestinationList]); 
+
   
-  // Effect to handle displaying dummy content when a place is selected
+  // Effect to fetch the content when a new destination is selected
   useEffect(() => {
-    if (selectedPlaceId) {
-        // For demonstration, we'll just pull some dummy content.
-        // You can use a more robust mapping in a real scenario.
-        const dummyContent = allDummyContent[selectedPlaceId]?.content || "No specific terms found for this destination. Please review the general guidelines.";
-        setTextContent(dummyContent);
-        setIsEditing(false); // Reset editing state on new selection
+    // highlight-start
+    if (selectedPlaceName) {
+      // Pass the destination NAME to the fetch action
+      fetchTermsContent(selectedPlaceName);
+      setIsEditing(false); 
     } else {
-        setTextContent(""); // Clear content if no place is selected
+      setTextContent(""); 
     }
-  }, [selectedPlaceId]);
+  }, [selectedPlaceName, fetchTermsContent]);
+  // highlight-end
+
+  // Effect to sync the local text area's content with the store's content
+  useEffect(() => {
+    setTextContent(currentTermsContent);
+  }, [currentTermsContent]);
 
 
-  // SIMULATED: Handle saving the updated content
-  const handleSave = () => {
-    if (!selectedPlaceId) {
+  // Handle saving the updated content via the store action
+  const handleSave = async () => {
+    // highlight-start
+    if (!selectedPlaceName) {
       toast.warn("Please select a destination to save terms for.");
       return;
     }
     setIsSaving(true);
-    console.log("Simulating save for destination ID:", selectedPlaceId);
-    console.log("New Content:", textContent);
-
-    setTimeout(() => {
-      try {
-        // Update the dummy content in memory
-        if (allDummyContent[selectedPlaceId]) {
-          allDummyContent[selectedPlaceId].content = textContent;
-        }
-        toast.success("Terms and conditions saved successfully!");
-        setIsEditing(false);
-      } catch (error) {
-        toast.error("Something went wrong while saving.");
-      } finally {
-        setIsSaving(false);
-      }
-    }, 1000); // 1-second delay
+    const data = { destination_name:selectedPlaceName, terms_and_conditions: textContent };
+    // Pass the destination NAME to the update action
+    await updateTermsContent(data);
+    setIsSaving(false);
+    setIsEditing(false);
+    // highlight-end
   };
 
   const handleTypeChange = (e) => {
     setTravelType(e.target.value);
-    setSelectedPlaceId(""); // Reset selection when type changes
+    // highlight-start
+    // Reset the destination NAME state
+    setSelectedPlaceName("");
+    // highlight-end
   };
   
   const handlePlaceChange = (e) => {
-    setSelectedPlaceId(e.target.value);
+    setSelectedPlaceName(e.target.value);
   };
 
   return (
-    <div className="flex flex-col gap-y-8">
-      {/* Page Title */}
+    <div className="flex flex-col gap-y-8 p-4 md:p-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50">
           Destination Terms Management
@@ -92,10 +93,8 @@ const TermsAndCondition = () => {
         </p>
       </div>
 
-      {/* Selection Card */}
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Travel Type Radio */}
             <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                     Select Category
@@ -118,32 +117,39 @@ const TermsAndCondition = () => {
                 </div>
             </div>
 
-            {/* Destination Dropdown (Now Dynamic) */}
             <div>
                 <label htmlFor="placeSelect" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     Select Destination
                 </label>
                 <select
                     id="placeSelect"
-                    value={selectedPlaceId}
+                    // highlight-start
+                    value={selectedPlaceName} // Controlled by the new state
+                    // highlight-end
                     onChange={handlePlaceChange}
                     className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-10 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50"
-                    disabled={isListLoading || termsList.length === 0}
+                    disabled={isListLoading || destinationList.length === 0}
                 >
                     <option value="">
                       {isListLoading ? "Loading Destinations..." : "-- Select a Destination --"}
                     </option>
-                    {termsList.map((place) => (
-                        <option key={place._id} value={place._id}>{place.destination_name}</option>
+                    {destinationList.map((place) => (
+                        // highlight-start
+                        // The key remains the unique _id for React's rendering.
+                        // The value is now the destination_name for the API call.
+                        <option key={place._id} value={place.destination_name}>
+                            {place.destination_name}
+                        </option>
+                        // highlight-end
                     ))}
                 </select>
             </div>
         </div>
       </div>
 
-
-      {/* Content Card */}
-      <div className={`rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900 ${!selectedPlaceId ? 'opacity-50' : ''}`}>
+      {/* highlight-start */}
+      <div className={`rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition-all dark:border-slate-800 dark:bg-slate-900 ${!selectedPlaceName ? 'opacity-50' : ''}`}>
+      {/* highlight-end */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-x-3">
                 <FileText className="size-6 text-slate-800 dark:text-slate-200" />
@@ -153,7 +159,9 @@ const TermsAndCondition = () => {
             </div>
             <div className="flex items-center gap-x-3">
                 {!isEditing ? (
-                  <button onClick={() => setIsEditing(true)} disabled={!selectedPlaceId || isSaving} className="inline-flex items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-600">
+                  // highlight-start
+                  <button onClick={() => setIsEditing(true)} disabled={!selectedPlaceName || isSaving || isContentLoading} className="inline-flex items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-600">
+                  {/* highlight-end */}
                       <Edit className="mr-2 h-4 w-4" />
                       <span>Edit</span>
                   </button>
@@ -165,8 +173,15 @@ const TermsAndCondition = () => {
             </div>
         </div>
 
-        <div className="mt-6">
-            {selectedPlaceId ? (
+        <div className="mt-6 min-h-[300px]">
+            {isContentLoading ? (
+                <div className="text-center py-20 flex flex-col items-center justify-center">
+                    <Loader2 className="size-8 text-slate-400 animate-spin mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">Loading Terms...</p>
+                </div>
+            // highlight-start
+            ) : selectedPlaceName ? (
+            // highlight-end
                 <textarea
                     value={textContent}
                     onChange={(e) => setTextContent(e.target.value)}

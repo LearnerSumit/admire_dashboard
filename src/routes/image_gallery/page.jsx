@@ -1,31 +1,41 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { ImagePlus, Loader2, X } from "lucide-react";
-import { toast } from 'react-toastify'; // Import the toast library
+import { toast } from 'react-toastify';
 import { usePlaceStore } from "../../stores/usePlaceStore";
 import { ENV } from "../../constants/api";
+import { apiClient } from "../../stores/authStore"; // It's better to use the configured apiClient
 
 const ImageGallery = () => {
-    // Component state
+    // --- Component's local state ---
     const [travelType, setTravelType] = useState("domestic");
     const [selectedPlace, setSelectedPlace] = useState("");
     const [images, setImages] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false); // Changed name for clarity
 
-    // Zustand store integration
-    const { galleryPlaces, fetchGalleryPlaces } = usePlaceStore();
+    // --- Zustand store integration ---
+    // highlight-start
+    // Updated to use the primary state and actions
+    const { 
+        destinationList, 
+        fetchDestinationList, 
+        isListLoading 
+    } = usePlaceStore();
+    // highlight-end
 
 
     // Effect to fetch places when travel type changes
     useEffect(() => {
-        fetchGalleryPlaces(travelType);
-    }, [travelType, fetchGalleryPlaces]);
+        // highlight-start
+        // Calling the primary fetch action
+        fetchDestinationList(travelType);
+        // highlight-end
+    }, [travelType, fetchDestinationList]); // Updated dependency
 
     // Handler for file input changes
     const handleImageChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length + images.length > 20) {
-            // Replaced alert with toast.warn
             toast.warn("You can upload a maximum of 20 images.");
             return;
         }
@@ -49,17 +59,16 @@ const ImageGallery = () => {
         setSelectedPlace(e.target.value);
     };
 
-    // Form submission handler with toast notifications
+    // Form submission handler
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!selectedPlace || images.length === 0) {
-            // Replaced alert with toast.error
             toast.error("Please select a destination and at least one image.");
             return;
         }
 
-        setIsLoading(true);
+        setIsUploading(true);
 
         const formData = new FormData();
         formData.append("destination", selectedPlace);
@@ -68,30 +77,34 @@ const ImageGallery = () => {
         });
 
         try {
-            const response = await axios.post(`${ENV.API_BASE_URL}/admin/image-Gallery`, formData);
+            // Using the configured apiClient is generally safer than a raw axios call
+            const response = await apiClient.post(`/admin/image-Gallery`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
 
             console.log("Upload successful:", response.data);
-            // Replaced alert with toast.success
             toast.success("Images uploaded successfully!");
 
             // Reset form state
             setImages([]);
-            setSelectedPlace("");
+            // Optionally reset the selected place as well
+            // setSelectedPlace("");
 
         } catch (error) {
-            // Replaced all error alerts with toast.error
             if (error.response) {
                 console.error("Server Error:", error.response.data);
                 toast.error(error.response.data.message || 'Upload failed: Server error');
             } else if (error.request) {
                 console.error("Network Error:", error.request);
-                toast.error("Upload failed: No response from server. Check network connection.");
+                toast.error("Upload failed: No response from server.");
             } else {
                 console.error("Error:", error.message);
                 toast.error(`An error occurred: ${error.message}`);
             }
         } finally {
-            setIsLoading(false);
+            setIsUploading(false);
         }
     };
 
@@ -135,12 +148,22 @@ const ImageGallery = () => {
                         value={selectedPlace}
                         onChange={handlePlaceChange}
                         className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        // highlight-start
+                        // Disable the dropdown while the destination list is loading
+                        disabled={isListLoading}
+                        // highlight-end
                         required
                     >
-                        <option value="">-- Select a Destination --</option>
-                        {galleryPlaces.map((place) => (
+                        {/* highlight-start */}
+                        {/* Show a loading state to the user */}
+                        <option value="">
+                            {isListLoading ? "Loading..." : "-- Select a Destination --"}
+                        </option>
+                        {/* Map over the primary destinationList */}
+                        {destinationList.map((place) => (
                             <option key={place._id} value={place.destination_name}>{place.destination_name}</option>
                         ))}
+                        {/* highlight-end */}
                     </select>
                 </div>
 
@@ -175,7 +198,7 @@ const ImageGallery = () => {
                 {images.length > 0 && (
                     <div>
                         <p className="text-lg font-semibold mb-3">Image Preview</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                             {images.map((img, idx) => (
                                 <div
                                     key={idx}
@@ -203,16 +226,16 @@ const ImageGallery = () => {
                 {/* Submit Button */}
                 <button
                     type="submit"
-                    disabled={!selectedPlace || images.length === 0 || isLoading}
+                    disabled={!selectedPlace || images.length === 0 || isUploading}
                     className="w-full inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-offset-gray-800"
                 >
-                    {isLoading ? (
+                    {isUploading ? (
                         <>
                             <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                             <span>Uploading...</span>
                         </>
                     ) : (
-                        <span>Upload Images and Create Post</span>
+                        <span>Upload Images</span>
                     )}
                 </button>
             </form>

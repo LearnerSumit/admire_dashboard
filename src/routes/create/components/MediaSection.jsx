@@ -1,27 +1,36 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { CheckCircle, GalleryHorizontal, Image as ImageIcon, Upload } from "lucide-react";
-
-const dummyImageData = {
-  Delhi: [
-    "https://placehold.co/600x400?text=Delhi+1",
-    "https://placehold.co/600x400?text=Delhi+2",
-    "https://placehold.co/600x400?text=Delhi+3",
-  ],
-  Goa: [
-    "https://placehold.co/600x400?text=Goa+1",
-    "https://placehold.co/600x400?text=Goa+2",
-    "https://placehold.co/600x400?text=Goa+3",
-  ],
-  Jaipur: [
-    "https://placehold.co/600x400?text=Jaipur+1",
-    "https://placehold.co/600x400?text=Jaipur+2",
-    "https://placehold.co/600x400?text=Jaipur+3",
-  ],
-};
+import { apiClient } from "../../../stores/authStore";
 
 const MediaSection = ({ formData, setFormData, styles }) => {
   const { labelStyle, inputStyle, cardStyle } = styles;
   const fileInputRef = useRef(null);
+
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch images from backend when selected_destination changes
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (!formData.selected_destination) {
+        setGalleryImages([]);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const res = await apiClient.get(`/admin/image-Gallery/${formData.selected_destination}`);
+        setGalleryImages(res?.data?.imageGalleryData?.image || []);
+      } catch (error) {
+        console.error("Error fetching gallery images:", error);
+        setGalleryImages([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, [formData.selected_destination]);
 
   const handleImageToggle = (imgUrl) => {
     const isSelected = formData.destination_images.includes(imgUrl);
@@ -85,40 +94,46 @@ const MediaSection = ({ formData, setFormData, styles }) => {
         </div>
       </div>
 
-      {/* Auto Image Grid */}
-      {formData.selected_destination && dummyImageData[formData.selected_destination] ? (
+      {/* Fetched Gallery Images */}
+      {formData.selected_destination ? (
         <>
           <label className={labelStyle}>
             <GalleryHorizontal className="inline mr-1 text-muted-foreground" size={16} />
             Select Images for {formData.selected_destination}
           </label>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-            {dummyImageData[formData.selected_destination].map((imgUrl, idx) => {
-              const isSelected = formData.destination_images.includes(imgUrl);
-              return (
-                <div
-                  key={idx}
-                  className={`relative cursor-pointer border-2 rounded-md transition ${
-                    isSelected ? "border-blue-500" : "border-gray-300"
-                  }`}
-                  onClick={() => handleImageToggle(imgUrl)}
-                >
-                  <img
-                    src={imgUrl}
-                    alt={`img-${idx}`}
-                    className="w-full h-20 object-cover rounded-md"
-                  />
-                  {isSelected && (
-                    <CheckCircle
-                      size={18}
-                      className="absolute top-1 right-1 text-blue-600 bg-white rounded-full"
+          {isLoading ? (
+            <p className="text-sm text-gray-500 italic">Loading images...</p>
+          ) : galleryImages.length > 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+              {galleryImages.map((imgUrl, idx) => {
+                const isSelected = formData.destination_images.includes(imgUrl);
+                return (
+                  <div
+                    key={idx}
+                    className={`relative cursor-pointer border-2 rounded-md transition ${
+                      isSelected ? "border-blue-500" : "border-gray-300"
+                    }`}
+                    onClick={() => handleImageToggle(imgUrl)}
+                  >
+                    <img
+                      src={imgUrl}
+                      alt={`img-${idx}`}
+                      className="w-full h-20 object-cover rounded-md"
                     />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    {isSelected && (
+                      <CheckCircle
+                        size={18}
+                        className="absolute top-1 right-1 text-blue-600 bg-white rounded-full"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 italic">No images found for this destination.</p>
+          )}
         </>
       ) : (
         <p className="text-sm text-gray-500 italic">

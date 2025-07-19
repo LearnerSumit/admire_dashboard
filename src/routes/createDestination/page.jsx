@@ -1,16 +1,19 @@
 import { useState } from "react";
-import axios from "axios";
 import { toast } from "react-toastify";
 import { MapPin, Globe, Loader2 } from "lucide-react";
-import { ENV } from "../../constants/api";
-import { apiClient } from "../../stores/authStore";
+import { usePlaceStore } from "../../stores/usePlaceStore";
 
 const CreateDestination = () => {
     const [data, setData] = useState({
-        destination_type: "domestic",
+        type: "domestic",
         destination_name: ""
     });
     const [isLoading, setIsLoading] = useState(false);
+
+    // highlight-start
+    // Get the createDestination action from the Zustand store
+    const createDestination = usePlaceStore((state) => state.createDestination);
+    // highlight-end
 
     const handleChange = (e) => {
         setData({
@@ -21,27 +24,26 @@ const CreateDestination = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!data.destination_name) {
+        if (!data.destination_name.trim()) {
             toast.error("Please enter a destination name.");
             return;
         }
 
         setIsLoading(true);
-        try {
-            const result = await apiClient.post("/admin/new-destination", data);
-            toast.success(`Destination "${data.destination_name}" created successfully!`);
-            console.log(result);
-            // Reset form after successful submission
+        // highlight-start
+        // Call the action from the store
+        const result = await createDestination(data);
+
+        // If the creation was successful, reset the form
+        if (result.success) {
             setData({
-                destination_type: "domestic",
+                type: data.type, // Keep the selected type
                 destination_name: ""
             });
-        } catch (error) {
-            console.log(error);
-            toast.error(error.response?.data?.message || "Failed to create destination.");
-        } finally {
-            setIsLoading(false);
         }
+        // Toast notifications are now handled by the store
+        // highlight-end
+        setIsLoading(false);
     }
 
     return (
@@ -64,9 +66,9 @@ const CreateDestination = () => {
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
-                                    name="destination_type"
+                                    name="type"
                                     value="domestic"
-                                    checked={data.destination_type === 'domestic'}
+                                    checked={data.type === 'domestic'}
                                     onChange={handleChange}
                                     className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
                                 />
@@ -75,9 +77,9 @@ const CreateDestination = () => {
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
-                                    name="destination_type"
+                                    name="type"
                                     value="international"
-                                    checked={data.destination_type === 'international'}
+                                    checked={data.type === 'international'}
                                     onChange={handleChange}
                                     className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
                                 />

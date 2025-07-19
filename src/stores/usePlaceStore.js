@@ -1,49 +1,118 @@
-import axios from "axios";
 import { create } from "zustand";
-import { ENV } from "../constants/api";
-import { toast } from "react-toastify"; // It's good practice to handle notifications here or return a status
+import { toast } from "react-toastify";
+import { apiClient } from "./authStore"; // Your configured axios instance
 
-export const usePlaceStore = create((set) => ({
-  // --- Existing State ---
-  itineraryPlaces: [],
-  galleryPlaces: [],
 
-  // --- New State for Terms and Conditions ---
-  termsList: [], // To store the list of documents (e.g., [{_id, name}, ...])
-  isListLoading: false, // To track loading state for the list
-  isContentLoaded: false, // To track loading state for the content
+export const usePlaceStore = create((set, get) => ({
+  // =================================================================
+  //  STATE
+  // =================================================================
 
-  // --- Existing Actions ---
-  fetchItineraryPlaces: async (travelType) => {
+
+  isContentLoading: false,
+  currentTermsContent: "",
+  isListLoading: false,
+  destinationList: [],
+
+
+  createDestination: async (destinationData) => {
     try {
-      const res = await axios.get(`${ENV.API_BASE_URL}/admin/destination/${travelType}`);
-      set({ itineraryPlaces: res.data.places });
+      await apiClient.post(`/admin/new-destination`, destinationData);
+      toast.success(`Destination "${destinationData.destination_name}" created successfully!`);
+      // After creating, call the single, consolidated fetch action.
+      await get().fetchDestinationList(destinationData.type);
+      return { success: true };
     } catch (error) {
-      console.log("Error fetching itinerary places:", error);
-      set({ itineraryPlaces: [] });
+      console.error("Error creating destination:", error);
+      toast.error(error.response?.data?.msg || "Failed to create destination.");
+      return { success: false };
     }
   },
 
-  fetchGalleryPlaces: async (travelType) => {
+  /**
+   * The main action to fetch the list of destinations.
+   * @param {'domestic' | 'international'} travelType
+   */
+  fetchDestinationList: async (travelType) => {
+    set({ isListLoading: true });
     try {
-      const res = await axios.get(`${ENV.API_BASE_URL}/admin/destination/${travelType}`);
-      set({ galleryPlaces: res.data.places });
+      const res = await apiClient.get(`/admin/destination/${travelType}`);
+      set({
+        destinationList: res.data.places,
+        isListLoading: false
+      });
     } catch (error) {
-      console.log("Error fetching gallery places:", error);
-      set({ galleryPlaces: [] });
+      console.error("Error fetching destination list:", error);
+      set({ destinationList: [], isListLoading: false });
     }
   },
 
-  // --- New Actions for Terms and Conditions ---
-
-
-  fetchTermsList: async (travelType) => {
+  /**
+   * Fetches the "Terms and Conditions" content for a specific destination.
+   * @param {string} placeId - The ID of the destination.
+   */
+  fetchTermsContent: async (placeId) => {
+    if (!placeId) {
+      set({ currentTermsContent: "" });
+      return;
+    }
+    set({ isContentLoading: true });
     try {
-      const res = await axios.get(`${ENV.API_BASE_URL}/admin/destination/${travelType}`);
-      set({ termsList: res.data.places });
+      // API endpoint for fetching specific terms content
+      const res = await apiClient.get(`/admin/TAC/${placeId}`);
+
+      set({
+        currentTermsContent: res.data.destinationData.terms_and_conditions || "",
+        isContentLoading: false
+      });
+
     } catch (error) {
-      console.log("Error fetching gallery places:", error);
-      set({ termsList: [] });
+      console.error("Error fetching terms content:", error);
+      set({
+        currentTermsContent: "Failed to load content.",
+        isContentLoading: false
+      });
     }
   },
+
+
+ 
+  updateTermsContent: async (data) => {
+    try {
+      const res = await apiClient.patch(`/admin/TAC`, data);
+      
+      toast.success("Terms and conditions saved successfully!");
+      // Optimistically update the state for a responsive UI
+      set({ currentTermsContent: res.data.destinationData.terms_and_conditions || "" });
+      return { success: true };
+    } catch (error) {
+      console.error("Error saving terms content:", error);
+      toast.error("Something went wrong while saving.");
+      return { success: false };
+    }
+  },
+
+  // =================================================================
+  //  BACKWARDS COMPATIBILITY LAYER
+  // =================================================================
+
+  // These getters and actions ensure older components that haven't been
+  // updated to use `destinationList` will continue to work without any changes.
+
+  // --- COMPATIBILITY GETTERS (STATE) ---
+  get termsList() {
+    return get().destinationList;
+  },
+  get galleryPlaces() {
+    return get().destinationList;
+  },
+  get itineraryPlaces() {
+    return get().destinationList;
+  },
+
+  // --- COMPATIBILITY ACTIONS ---
+  fetchTermsList: (travelType) => get().fetchDestinationList(travelType),
+  fetchGalleryPlaces: (travelType) => get().fetchDestinationList(travelType),
+  fetchItineraryPlaces: (travelType) => get().fetchDestinationList(travelType),
+
 }));

@@ -7,8 +7,14 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
 
   const themes = ['Family', 'Honeymoon', 'Adventures', 'Solo'];
 
-  const { itineraryPlaces, fetchItineraryPlaces } = usePlaceStore();
-
+  // highlight-start
+  // Updated to use the primary state and actions from the store
+  const { 
+    destinationList, 
+    fetchDestinationList, 
+    isListLoading 
+  } = usePlaceStore();
+  // highlight-end
 
   const handleThemeChange = (e) => {
     const { value, checked } = e.target;
@@ -30,16 +36,22 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
   };
 
 
+  // Effect to fetch the destination list when the travel type changes
   useEffect(() => {
     async function fetchPlacesData() {
       if (formData.travel_type) {
-        await fetchItineraryPlaces(formData.travel_type);
+        // highlight-start
+        // Calling the primary fetch action
+        await fetchDestinationList(formData.travel_type);
+        // highlight-end
       }
     }
 
     fetchPlacesData();
-  }, [formData.travel_type,fetchItineraryPlaces]);
-
+    // highlight-start
+    // Updated dependency array
+  }, [formData.travel_type, fetchDestinationList]);
+  // highlight-end
 
 
   return (
@@ -105,12 +117,22 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
             value={formData.selected_destination}
             onChange={handleInputChange}
             className={inputStyle}
+            // highlight-start
+            // Disable dropdown while the list is loading
+            disabled={isListLoading}
+            // highlight-end
             required
           >
-            <option value="">-- Select --</option>
-            {itineraryPlaces.map((place) => (
+            {/* highlight-start */}
+            {/* Show loading text while fetching */}
+            <option value="">
+              {isListLoading ? "Loading..." : "-- Select Destination --"}
+            </option>
+            {/* Map over the primary destinationList */}
+            {destinationList.map((place) => (
               <option key={place._id} value={place.destination_name}>{place.destination_name}</option>
             ))}
+            {/* highlight-end */}
           </select>
         </div>
 
@@ -141,7 +163,6 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
           {/* Show only when Custom is selected */}
           {formData.duration === "Custom" && (
             <div className="flex gap-4 mt-3">
-              {/* Days input */}
               <div className="flex flex-col">
                 <label className="text-sm mb-1 text-muted-foreground">Days</label>
                 <input
@@ -161,8 +182,6 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
                   className={inputStyle}
                 />
               </div>
-
-              {/* Nights input */}
               <div className="flex flex-col">
                 <label className="text-sm mb-1 text-muted-foreground">Nights</label>
                 <input

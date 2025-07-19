@@ -24,7 +24,7 @@ const CreateItineriesPage = () => {
     destination_detail: "",
     inclusion: "",
     exclusion: "",
-    terms_and_conditions: "All bookings are subject to availability. Cancellation charges may apply.",
+    terms_and_conditions: "",
     payment_mode: "",                     
     cancellation_policy: "",             
     pricing: "",
@@ -35,7 +35,9 @@ const CreateItineriesPage = () => {
     days_information: [{ day: "1", locationName: "", locationDetail: "" }],
   });
 
-  // const { formData, setFormData } = useItineraryStore();
+  console.log("console in Itinerary Page: ",formData)
+
+ 
 
 
 
@@ -170,6 +172,7 @@ const CreateItineriesPage = () => {
             formData={formData}
             handleInputChange={handleInputChange}
             styles={styleProps}
+            setFormData={setFormData}
           />
 
           <HotelDetailsSection
