@@ -8,10 +8,10 @@ import {
   PricingSection,
 } from "./components";
 import { extractDaysAndNights } from "../../utils/extractDaysFromDuration";
+import { apiClient } from "../../stores/authStore";
+import { toast } from "react-toastify";
 
 const CreateItineriesPage = () => {
-
-
   // --- STATE MANAGEMENT ---
   const [formData, setFormData] = useState({
     title: "",
@@ -21,27 +21,46 @@ const CreateItineriesPage = () => {
     duration: "",
     selected_destination: "",
     itinerary_theme: ["Family"],
+    classification: ["Trending"],
     destination_detail: "",
     inclusion: "",
     exclusion: "",
     terms_and_conditions: "",
-    payment_mode: "",                     
-    cancellation_policy: "",             
+    payment_mode: "",
+    cancellation_policy: "",
     pricing: "",
     best_price: "",
     discount: "",
-    destination_images: [""],
-    hotel_details: [{ type: "Delux", roomType: "", price: "", discount: "" }],
+    destination_images: [],
+    destination_thumbnails: [],
+    hotel_as_per_category: "",
     days_information: [{ day: "1", locationName: "", locationDetail: "" }],
   });
 
-  console.log("console in Itinerary Page: ",formData)
+  console.log("console in Itinerary Page: ", formData);
 
- 
-
-
-
-
+  // --- PAYLOAD FOR API ---
+  const payload = {
+    title: formData.title,
+    travel_type: formData.travel_type,
+    itinerary_visibility: formData.itinerary_visibility,
+    itinerary_type: formData.itinerary_type,
+    destination_name: formData.selected_destination,
+    destination_theme: formData.itinerary_theme,
+    destination_category: formData.classification,
+    duration: formData.duration,
+    day_info: formData.days_information || [],
+    destination_images: formData.destination_images || [],
+    thumbnails: formData.destination_thumbnails || [],
+    pricing: {
+      standard_price: formData.pricing || "",
+      discount: formData.discount || "",
+    },
+    inclusion: formData.inclusion || "",
+    exclusion: formData.exclusion || "",
+    terms_and_condition: formData.terms_and_conditions || "",
+    payment_mode: formData.payment_mode || "",
+  };
 
   // --- HANDLER FUNCTIONS ---
   const handleInputChange = (e) => {
@@ -68,15 +87,51 @@ const CreateItineriesPage = () => {
     setFormData((prev) => ({ ...prev, [arrayName]: newArray }));
   };
 
-  // --- SUBMIT FUNCTION ---
-  const handleSubmit = (e) => {
+  // --- SUBMIT FUNCTION WITH TOAST NOTIFICATIONS ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting Itinerary Data:", JSON.stringify(formData, null, 2));
-    alert("Form data has been logged to the console. Press F12 to view.");
+
+    // Show a loading toast and get its ID
+    const toastId = toast.loading("Creating your itinerary...");
+
+    try {
+      // Await the API call
+      const response = await apiClient.post("/admin/itinerary", payload);
+
+      // Check for a successful response status
+      if (response.status === 200 || response.status === 201) {
+        // Update the toast to a success message
+        toast.update(toastId, {
+          render: "Itinerary created successfully! 🎉",
+          type: "success",
+          isLoading: false,
+          autoClose: 5000, // Auto close after 5 seconds
+        });
+        // Optionally, you can reset the form here
+      } else {
+        // Handle cases where the server returns a non-error status but it's not a success
+        throw new Error(response.data?.message || "An unexpected server response occurred.");
+      }
+    } catch (error) {
+      // Log the detailed error for debugging purposes
+      console.error("Error creating itinerary:", error);
+
+      // Extract a user-friendly error message from the server response, or use a default one
+      const errorMessage =
+        error.response?.data?.message || error.message || "Failed to create itinerary. Please try again.";
+
+      // Update the toast to show the error message
+      toast.update(toastId, {
+        render: `Error: ${errorMessage} 🤯`,
+        type: "error",
+        isLoading: false,
+        autoClose: 7000, // Keep the error message on screen a bit longer
+      });
+    }
   };
 
 
-  // normal duration
+  // --- DYNAMIC DAY GENERATION ---
   useEffect(() => {
     if (formData.duration && formData.duration !== "Custom") {
       const { days } = extractDaysAndNights(formData.duration);
@@ -88,12 +143,10 @@ const CreateItineriesPage = () => {
       setFormData((prev) => ({
         ...prev,
         days_information: dayArray,
-
       }));
     }
   }, [formData.duration]);
 
-  // custom duration
   useEffect(() => {
     if (formData.duration === "Custom" && formData.custom_days) {
       const days = parseInt(formData.custom_days, 10);
@@ -111,9 +164,7 @@ const CreateItineriesPage = () => {
     }
   }, [formData.custom_days, formData.duration]);
 
-
-
-  // --- SHARED STYLING (Dark/Light aware) ---
+  // --- SHARED STYLING ---
   const styleProps = {
     inputStyle:
       "block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500",
@@ -154,19 +205,8 @@ const CreateItineriesPage = () => {
           <MediaSection
             formData={formData}
             setFormData={setFormData}
-            handleInputChange={handleInputChange}
             styles={styleProps}
           />
-
-          {/* <PricingMediaSection
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleImageChange={handleImageChange}
-            handleAddItem={handleAddItem}
-            handleRemoveItem={handleRemoveItem}
-            styles={styleProps}
-            setFormData={setFormData}
-          /> */}
 
           <DescriptionsSection
             formData={formData}
@@ -181,11 +221,9 @@ const CreateItineriesPage = () => {
             handleAddItem={handleAddItem}
             handleRemoveItem={handleRemoveItem}
             styles={styleProps}
+            handleInputChange={handleInputChange}
           />
 
-
-
-          {/* Submit Button */}
           <div className="flex justify-end">
             <button
               type="submit"

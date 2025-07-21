@@ -6,13 +6,15 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
   const { cardStyle, labelStyle, inputStyle } = styles;
 
   const themes = ['Family', 'Honeymoon', 'Adventures', 'Solo'];
+  const classification_types = ['Trending', 'Exclusive'];
+
 
   // highlight-start
   // Updated to use the primary state and actions from the store
-  const { 
-    destinationList, 
-    fetchDestinationList, 
-    isListLoading 
+  const {
+    destinationList,
+    fetchDestinationList,
+    isListLoading
   } = usePlaceStore();
   // highlight-end
 
@@ -35,23 +37,32 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
     handleInputChange({ target: { name: 'selected_destination', value: '' } });
   };
 
+  const handleClassificationChange = (e) => {
+    const { value, checked } = e.target;
+    const updatedClassification = checked
+      ? [...formData.classification, value]
+      : formData.classification.filter((classi) => classi !== value);
+
+    handleInputChange({
+      target: {
+        name: 'classification',
+        value: updatedClassification,
+      },
+    });
+  };
+
 
   // Effect to fetch the destination list when the travel type changes
   useEffect(() => {
     async function fetchPlacesData() {
       if (formData.travel_type) {
-        // highlight-start
-        // Calling the primary fetch action
         await fetchDestinationList(formData.travel_type);
         // highlight-end
       }
     }
 
     fetchPlacesData();
-    // highlight-start
-    // Updated dependency array
   }, [formData.travel_type, fetchDestinationList]);
-  // highlight-end
 
 
   return (
@@ -222,6 +233,27 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
                   className="form-checkbox"
                 />
                 <span>{theme}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Classification */}
+        <div>
+          <label className={labelStyle}>
+            <ListChecks className="inline mr-2 text-muted-foreground" size={16} /> Classification
+          </label>
+          <div className="flex flex-wrap gap-3 mt-2">
+            {classification_types.map((classi) => (
+              <label key={classi} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  value={classi}
+                  checked={formData.classification.includes(classi)}
+                  onChange={handleClassificationChange}
+                  className="form-checkbox"
+                />
+                <span>{classi}</span>
               </label>
             ))}
           </div>

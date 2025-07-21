@@ -1,17 +1,18 @@
-import { useRef, useEffect, useState } from "react";
-import { CheckCircle, GalleryHorizontal, Image as ImageIcon, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle, GalleryHorizontal, Image as ImageIcon } from "lucide-react";
 import { apiClient } from "../../../stores/authStore";
 
 const MediaSection = ({ formData, setFormData, styles }) => {
-  const { labelStyle, inputStyle, cardStyle } = styles;
-  const fileInputRef = useRef(null);
+  const { labelStyle, cardStyle } = styles;
 
   const [galleryImages, setGalleryImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch images from backend when selected_destination changes
+  // Fetch gallery images from the backend when selected_destination changes
+  // This data will be used for BOTH thumbnails and gallery sections.
   useEffect(() => {
     const fetchImages = async () => {
+      // If no destination is selected, clear images and return
       if (!formData.selected_destination) {
         setGalleryImages([]);
         return;
@@ -20,10 +21,11 @@ const MediaSection = ({ formData, setFormData, styles }) => {
       try {
         setIsLoading(true);
         const res = await apiClient.get(`/admin/image-Gallery/${formData.selected_destination}`);
+        // Set the fetched images to state
         setGalleryImages(res?.data?.imageGalleryData?.image || []);
       } catch (error) {
         console.error("Error fetching gallery images:", error);
-        setGalleryImages([]);
+        setGalleryImages([]); // Clear images on error
       } finally {
         setIsLoading(false);
       }
@@ -32,6 +34,7 @@ const MediaSection = ({ formData, setFormData, styles }) => {
     fetchImages();
   }, [formData.selected_destination]);
 
+  // Toggles an image in the main destination_images array
   const handleImageToggle = (imgUrl) => {
     const isSelected = formData.destination_images.includes(imgUrl);
     const updatedImages = isSelected
@@ -44,96 +47,79 @@ const MediaSection = ({ formData, setFormData, styles }) => {
     }));
   };
 
-  const handleThumbnailUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const localUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({
-        ...prev,
-        destination_thumbnail: localUrl,
-      }));
+  // Toggles an image in the destination_thumbnails array
+  const handleThumbnailToggle = (thumbUrl) => {
+    const isSelected = formData.destination_thumbnails.includes(thumbUrl);
+    const updatedThumbnails = isSelected
+      ? formData.destination_thumbnails.filter((url) => url !== thumbUrl)
+      : [...formData.destination_thumbnails, thumbUrl];
+
+    setFormData((prev) => ({
+      ...prev,
+      destination_thumbnails: updatedThumbnails,
+    }));
+  };
+
+  const renderImageGrid = (images, selectedImages, onToggle, type) => {
+    if (isLoading) {
+      return <p className="text-sm text-gray-500 italic">Loading images...</p>;
     }
+    if (images.length > 0) {
+      return (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          {images.map((imgUrl, idx) => {
+            const isSelected = selectedImages.includes(imgUrl);
+            return (
+              <div
+                key={`${type}-${idx}`}
+                className={`relative cursor-pointer border-2 rounded-md transition ${
+                  isSelected ? "border-blue-500" : "border-gray-300"
+                }`}
+                onClick={() => onToggle(imgUrl)}
+              >
+                <img
+                  src={imgUrl}
+                  alt={`${type}-${idx}`}
+                  className="w-full h-20 object-cover rounded-md"
+                />
+                {isSelected && (
+                  <CheckCircle
+                    size={18}
+                    className="absolute top-1 right-1 text-blue-600 bg-white rounded-full"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+    return <p className="text-sm text-gray-500 italic">No images found for this destination.</p>;
   };
 
   return (
     <div className={`mt-8 space-y-6 ${cardStyle}`}>
       <h2 className="text-xl font-semibold border-b border-gray-700 pb-2">Media</h2>
 
-      {/* Thumbnail Upload */}
-      <div>
-        <label className={labelStyle}>
-          <ImageIcon className="inline mr-1 text-muted-foreground" size={16} />
-          Upload Thumbnail Image
-        </label>
-
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current.click()}
-            className="inline-flex items-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
-          >
-            <Upload size={16} className="mr-2" />
-            Choose File
-          </button>
-
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleThumbnailUpload}
-            className="hidden"
-          />
-
-          {formData.destination_thumbnail && (
-            <img
-              src={formData.destination_thumbnail}
-              alt="Thumbnail Preview"
-              className="w-20 h-14 object-cover rounded border"
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Fetched Gallery Images */}
       {formData.selected_destination ? (
         <>
-          <label className={labelStyle}>
-            <GalleryHorizontal className="inline mr-1 text-muted-foreground" size={16} />
-            Select Images for {formData.selected_destination}
-          </label>
+          {/* Thumbnail Selection Section */}
+          <div className="space-y-3">
+            <label className={labelStyle}>
+              <ImageIcon className="inline mr-1 text-muted-foreground" size={16} />
+              Select Thumbnail Images for {formData.selected_destination}
+            </label>
+            {renderImageGrid(galleryImages, formData.destination_thumbnails, handleThumbnailToggle, "thumbnail")}
+          </div>
 
-          {isLoading ? (
-            <p className="text-sm text-gray-500 italic">Loading images...</p>
-          ) : galleryImages.length > 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-              {galleryImages.map((imgUrl, idx) => {
-                const isSelected = formData.destination_images.includes(imgUrl);
-                return (
-                  <div
-                    key={idx}
-                    className={`relative cursor-pointer border-2 rounded-md transition ${
-                      isSelected ? "border-blue-500" : "border-gray-300"
-                    }`}
-                    onClick={() => handleImageToggle(imgUrl)}
-                  >
-                    <img
-                      src={imgUrl}
-                      alt={`img-${idx}`}
-                      className="w-full h-20 object-cover rounded-md"
-                    />
-                    {isSelected && (
-                      <CheckCircle
-                        size={18}
-                        className="absolute top-1 right-1 text-blue-600 bg-white rounded-full"
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500 italic">No images found for this destination.</p>
-          )}
+          {/* Destination Images Selection Section */}
+          <div className="space-y-3 pt-4">
+            <label className={labelStyle}>
+              <GalleryHorizontal className="inline mr-1 text-muted-foreground" size={16} />
+              Select Destination Images for {formData.selected_destination}
+            </label>
+            {renderImageGrid(galleryImages, formData.destination_images, handleImageToggle, "gallery")}
+          </div>
         </>
       ) : (
         <p className="text-sm text-gray-500 italic">

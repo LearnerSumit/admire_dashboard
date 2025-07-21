@@ -1,4 +1,4 @@
-import { Ban, ChartColumn, CirclePlus, ClipboardList, CreditCard, FileText, Images, MapPin, UserPlus } from "lucide-react";
+import { Ban, ChartColumn, CirclePlus, ClipboardList, CreditCard, FileText, FileVideo2, Images, MapPin, UserPlus } from "lucide-react";
 
 import ProfileImage from "@/assets/profile-image.jpg";
 import ProductImage from "@/assets/product-image.jpg";
@@ -59,6 +59,16 @@ export const navbarLinks = [
                 label: "Cancellation Policy",
                 icon: Ban,
                 path: "cancellation_policy"
+            },
+            {
+                label:"Upload Hero Video",
+                icon:FileVideo2,
+                path:"hero_video"
+            },
+            {
+                label:"Upload Testimonials",
+                icon:FileVideo2,
+                path:"video_testimonials_upload"
             }
 
         ],
