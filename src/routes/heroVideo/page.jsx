@@ -47,7 +47,7 @@ const HeroVideoUpload = () => {
     try {
       setIsLoading(true);
 
-      const response = await apiClient.post("/admin/hero", formData);
+      const response = await apiClient.post("/admin/hero-section", formData);
 
       if (response.data.success) {
         toast.success(response.data.message || "Video uploaded successfully!");
