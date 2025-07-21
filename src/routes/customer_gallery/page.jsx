@@ -9,11 +9,11 @@ const CustomerGallery = () => {
   // Handler for file input changes
   const handleImageChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    if (selectedFiles.length + images.length > 20) {
-      // Replaced alert with toast.warn
-      toast.warn("You can upload a maximum of 20 images.");
-      return;
-    }
+    // if (selectedFiles.length + images.length > 20) {
+    //   // Replaced alert with toast.warn
+    //   toast.warn("You can upload a maximum of 20 images.");
+    //   return;
+    // }
     setImages((prev) => [...prev, ...selectedFiles]);
   };
 
