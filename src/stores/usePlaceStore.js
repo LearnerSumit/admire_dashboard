@@ -37,6 +37,7 @@ export const usePlaceStore = create((set, get) => ({
     set({ isListLoading: true });
     try {
       const res = await apiClient.get(`/admin/destination/${travelType}`);
+      // console.log("Console in use place:-->",res.data);
       set({
         destinationList: res.data.places,
         isListLoading: false
@@ -59,10 +60,10 @@ export const usePlaceStore = create((set, get) => ({
     set({ isContentLoading: true });
     try {
       // API endpoint for fetching specific terms content
-      const res = await apiClient.get(`/admin/TAC/${placeId}`);
+      const res = await apiClient.get(`/admin/tnc/${placeId}`);
 
       set({
-        currentTermsContent: res.data.destinationData.terms_and_conditions || "",
+        currentTermsContent: res.data.tnc.terms_And_condition || "",
         isContentLoading: false
       });
 
@@ -79,11 +80,12 @@ export const usePlaceStore = create((set, get) => ({
  
   updateTermsContent: async (data) => {
     try {
-      const res = await apiClient.patch(`/admin/TAC`, data);
+      const res = await apiClient.patch(`/admin/tnc`, data);
+      // console.log("res.data.destinationData.terms_and_conditions-->", res.data);
       
       toast.success("Terms and conditions saved successfully!");
       // Optimistically update the state for a responsive UI
-      set({ currentTermsContent: res.data.destinationData.terms_and_conditions || "" });
+      set({ currentTermsContent: res.data.data.terms_And_condition || "" });
       return { success: true };
     } catch (error) {
       console.error("Error saving terms content:", error);

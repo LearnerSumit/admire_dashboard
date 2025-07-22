@@ -8,15 +8,16 @@ const TermsAndCondition = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [travelType, setTravelType] = useState("domestic");
-  
-  // highlight-start
+
+
   // State now holds the destination NAME, not the ID
   const [selectedPlaceName, setSelectedPlaceName] = useState("");
-  // highlight-end
+
   
   // Local state for the text area, synced with the store's content
   const [textContent, setTextContent] = useState("");
 
+  
   // --- Get state and actions from the Zustand store ---
   const {
     destinationList,
@@ -39,7 +40,7 @@ const TermsAndCondition = () => {
   useEffect(() => {
     // highlight-start
     if (selectedPlaceName) {
-      // Pass the destination NAME to the fetch action
+      // Pass the destination id to the fetch action
       fetchTermsContent(selectedPlaceName);
       setIsEditing(false); 
     } else {
@@ -62,7 +63,7 @@ const TermsAndCondition = () => {
       return;
     }
     setIsSaving(true);
-    const data = { destination_name:selectedPlaceName, terms_and_conditions: textContent };
+    const data = { id:selectedPlaceName, terms_and_conditions: textContent };
     // Pass the destination NAME to the update action
     await updateTermsContent(data);
     setIsSaving(false);
@@ -137,7 +138,7 @@ const TermsAndCondition = () => {
                         // highlight-start
                         // The key remains the unique _id for React's rendering.
                         // The value is now the destination_name for the API call.
-                        <option key={place._id} value={place.destination_name}>
+                        <option key={place._id} value={place._id}>
                             {place.destination_name}
                         </option>
                         // highlight-end

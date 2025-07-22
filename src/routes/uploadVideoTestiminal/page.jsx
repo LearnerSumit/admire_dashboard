@@ -148,7 +148,7 @@ const UploadVideoTestimonial = () => {
           {/* Text Fields */}
           <div>
             <label htmlFor="name" className={labelStyle}>
-              <Text className="mr-2" size={16} /> Customer Name
+              <Text className="mr-2" size={16} /> Title
             </label>
             <input
               type="text"

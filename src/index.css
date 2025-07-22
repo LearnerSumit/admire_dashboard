@@ -82,6 +82,7 @@ body {
     .table-cell {
         @apply w-fit whitespace-nowrap p-4 font-medium;
     }
+    
 }
 
 .recharts-default-tooltip {
@@ -94,4 +95,45 @@ body {
 
 .recharts-tooltip-item {
     @apply text-base font-medium !text-blue-500 dark:!text-blue-600;
+}
+.ql-container {
+  min-height: 150px;
+  height: auto !important;
+  max-height: none;
+  padding-bottom: 10px;
+}
+
+.ql-editor {
+  min-height: 150px;
+  height: auto !important;
+  overflow-y: hidden;
+}
+
+.quill-dark .ql-container {
+  background-color: #0f172a; /* slate-950 */
+  color: #f1f5f9; /* slate-50 */
+  border-color: #334155; /* slate-700 */
+}
+
+.quill-dark .ql-editor {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+.quill-dark .ql-toolbar {
+  background-color: #1e293b; /* slate-800 */
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.quill-dark .ql-toolbar button,
+.quill-dark .ql-toolbar .ql-picker-label,
+.quill-dark .ql-toolbar .ql-picker-item {
+  color: #f1f5f9;
+  fill: #f1f5f9;
+}
+
+.quill-dark .ql-toolbar .ql-picker-options {
+  background-color: #1e293b;
+  color: #f1f5f9;
 }

@@ -9,21 +9,33 @@ import {
 import { useEffect, useState } from "react";
 import { apiClient } from "../../../stores/authStore";
 import { toast } from "react-toastify";
+import { usePlaceStore } from "../../../stores/usePlaceStore";
 
 const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData }) => {
   const { cardStyle, labelStyle, inputStyle } = styles;
 
+  const {
+    destinationList
+  } = usePlaceStore();
   const [termsLoading, setTermsLoading] = useState(false);
 
-  const fetchTermsContent = async (destinationId) => {
+  const getIdByDestinationName = (name) => {
+    const destination = destinationList.find(dest => dest.destination_name === name);
+    return destination ? destination._id : null;
+  };
+
+  const fetchTermsContent = async (destinationName) => {
+    const destinationId = getIdByDestinationName(destinationName);
     try {
       setTermsLoading(true);
-      const res = await apiClient.get(`/admin/TAC/${destinationId}`);
+      const res = await apiClient.get(`/admin/tnc/${destinationId}`);
 
-      if (res.data.destinationData.terms_and_conditions) {
+      console.log("res.data.destinationData.terms_and_conditions", res.data);
+
+      if (res.data.tnc.terms_And_condition) {
         setFormData((prev) => ({
           ...prev,
-          terms_and_conditions: res.data.destinationData.terms_and_conditions,
+          terms_and_conditions: res.data.tnc.terms_And_condition,
         }));
       } else {
         toast.warning("No Terms & Conditions found for this destination.");
@@ -70,7 +82,7 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
       } catch (error) {
         console.error("Error fetching cancellation policy:", error);
         toast.error("Failed to load cancellation policy.");
-      } 
+      }
     };
 
     fetchContent();
@@ -87,7 +99,7 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
     if (formData.travel_type) {
       fetchPaymentMode(formData.travel_type);
     }
-  }, [formData.travel_type]);
+  }, [formData.travel_type, formData.selected_destination]);
 
   return (
     <div className={`${cardStyle} space-y-4`}>

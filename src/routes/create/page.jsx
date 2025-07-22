@@ -37,7 +37,7 @@ const CreateItineriesPage = () => {
     days_information: [{ day: "1", locationName: "", locationDetail: "" }],
   });
 
-  console.log("console in Itinerary Page: ", formData);
+  console.log("console in Itinerary Page:---> ", formData);
 
   // --- PAYLOAD FOR API ---
   const payload = {
