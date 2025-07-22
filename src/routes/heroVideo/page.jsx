@@ -42,7 +42,7 @@ const HeroVideoUpload = () => {
 
     const formData = new FormData();
     formData.append("video", video);
-    formData.append("page", page); // Additional field
+    formData.append("title", page); // Additional field
 
     try {
       setIsLoading(true);

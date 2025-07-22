@@ -19,6 +19,9 @@ import PaymentMode from "./routes/paymentmode/page";
 import CencellationMode from "./routes/cancellationpolicy/page";
 import HeroVideoUpload from "./routes/heroVideo/page";
 import UploadVideoTestimonial from "./routes/uploadVideoTestiminal/page"
+import CreateBlog from "./routes/createblog/page";
+import BlogList from "./routes/bloglist/page";
+import UsersList from "./routes/userslist/page";
 
 
 // It's good practice to have placeholder pages for login, unauthorized, etc.
@@ -88,6 +91,18 @@ function App() {
                         {
                             path: "video_testimonials_upload",
                             element: <UploadVideoTestimonial />,
+                        },
+                        {
+                            path: "create_blog",
+                            element: <CreateBlog />,
+                        },
+                        {
+                            path: "blogs_list",
+                            element: <BlogList />,
+                        },
+                        {
+                            path: "users_list",
+                            element: <UsersList />,
                         },
                         {
                             // This nested route has specific role-based protection

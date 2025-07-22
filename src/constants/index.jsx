@@ -1,76 +1,71 @@
-import { Ban, ChartColumn, CirclePlus, ClipboardList, CreditCard, FileText, FileVideo2, Images, MapPin, UserPlus } from "lucide-react";
+import {
+    UserPlus, LayoutList, CirclePlus, FileVideo2, FileText,
+    CreditCard, Ban, Images, MapPin, PencilLine, LayoutDashboard // <-- Import LayoutDashboard
+} from "lucide-react";
 
 import ProfileImage from "@/assets/profile-image.jpg";
 import ProductImage from "@/assets/product-image.jpg";
 
+// src/constants/index.js (or wherever your navbarLinks is)
+
+
+
 export const navbarLinks = [
     {
         title: "Dashboard",
+        icon: LayoutDashboard, // <-- Add icon here
+        path: "/",
+    },
+    {
+        title: "Users",
         links: [
-            {
-                label: "Dashboard",
-                icon: ChartColumn,
-                path: "/",
-            },
-            {
-                label: "Create Itinerary",
-                icon: CirclePlus,
-                path: "/create_itinerary",
-            },
-            {
-                label: "Itinerary List",
-                icon: ClipboardList,
-                path: "/itinerary_list",
-            },
-            {
-                label: "Image Gallery",
-                icon: Images,
-                path: "image_gallery"
-            },
-            {
-                label: "Customer Gallery",
-                icon: Images,
-                path: "customer_gallery"
-            },
-            {
-                label: "Create Destination",
-                icon: MapPin,
-                path: "create_destination"
-            },
-            {
-                label: "Add User",
-                icon: UserPlus,
-                path: "add_user"
-            }
-            ,
-            {
-                label: "Terms and Conditions",
-                icon: FileText,
-                path: "terms_and_conditions"
-            }
-            ,
-            {
-                label: "Payment Mode",
-                icon: CreditCard,
-                path: "payment_mode"
-            }
-            ,
-            {
-                label: "Cancellation Policy",
-                icon: Ban,
-                path: "cancellation_policy"
-            },
-            {
-                label:"Upload Hero Video",
-                icon:FileVideo2,
-                path:"hero_video"
-            },
-            {
-                label:"Upload Testimonials",
-                icon:FileVideo2,
-                path:"video_testimonials_upload"
-            }
+            { label: "Add User", icon: UserPlus, path: "/add_user" },
+            { label: "Users List", icon: LayoutList, path: "/users_list" },
+        ],
+    },
+    {
+        title: "Itineraries",
+        links: [
+            { label: "Create Itinerary", icon: CirclePlus, path: "/create_itinerary" },
+            { label: "Itinerary List", icon: LayoutList, path: "/itinerary_list" },
+        ],
+    },
+    {
+        title: "Images Handling",
+        links: [
+            { label: "Customer Gallery", icon: Images, path: "/customer_gallery" },
+            { label: "Image Gallery", icon: Images, path: "/image_gallery" },
+        ],
+    },
+    {
+        title: "Destinations",
+        links: [
+            { label: "Create Destination", icon: MapPin, path: "/create_destination" },
+            { label: "Destination List", icon: LayoutList, path: "/destination_list" },
+        ],
+    },
+    {
+        title: "Video Section",
+        links: [
+            { label: "Hero Video", icon: FileVideo2, path: "/hero_video" },
+            { label: "Testimonial Video", icon: FileVideo2, path: "/video_testimonials_upload" },
+        ],
+    },
+    {
+        title: "Terms",
+        links: [
+            { label: "Terms & Conditions", icon: FileText, path: "/terms_and_conditions" },
+            { label: "Payment Mode Terms", icon: CreditCard, path: "/payment_mode" },
+            { label: "Cancellation Policy", icon: Ban, path: "/cancellation_policy" },
+        ],
+    },
 
+
+    {
+        title: "Blog",
+        links: [
+            { label: "Create Blog", icon: PencilLine, path: "/create_blog" },
+            { label: "Blogs List", icon: LayoutList, path: "/blogs_list" },
         ],
     },
 ];
