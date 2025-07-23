@@ -29,7 +29,6 @@ const CreateItineriesPage = () => {
     payment_mode: "",
     cancellation_policy: "",
     pricing: "",
-    best_price: "",
     discount: "",
     destination_images: [],
     destination_thumbnails: [],
@@ -39,28 +38,7 @@ const CreateItineriesPage = () => {
 
   console.log("console in Itinerary Page:---> ", formData);
 
-  // --- PAYLOAD FOR API ---
-  const payload = {
-    title: formData.title,
-    travel_type: formData.travel_type,
-    itinerary_visibility: formData.itinerary_visibility,
-    itinerary_type: formData.itinerary_type,
-    destination_name: formData.selected_destination,
-    destination_theme: formData.itinerary_theme,
-    destination_category: formData.classification,
-    duration: formData.duration,
-    day_info: formData.days_information || [],
-    destination_images: formData.destination_images || [],
-    thumbnails: formData.destination_thumbnails || [],
-    pricing: {
-      standard_price: formData.pricing || "",
-      discount: formData.discount || "",
-    },
-    inclusion: formData.inclusion || "",
-    exclusion: formData.exclusion || "",
-    terms_and_condition: formData.terms_and_conditions || "",
-    payment_mode: formData.payment_mode || "",
-  };
+ 
 
   // --- HANDLER FUNCTIONS ---
   const handleInputChange = (e) => {
@@ -96,7 +74,7 @@ const CreateItineriesPage = () => {
 
     try {
       // Await the API call
-      const response = await apiClient.post("/admin/itinerary", payload);
+      const response = await apiClient.post("/admin/itinerary", formData);
 
       // Check for a successful response status
       if (response.status === 200 || response.status === 201) {

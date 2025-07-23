@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CheckCircle, GalleryHorizontal, Image as ImageIcon } from "lucide-react";
+import { CheckCircle, GalleryHorizontal, Image as ImageIcon, Video, X } from "lucide-react";
 import { apiClient } from "../../../stores/authStore";
 
 const MediaSection = ({ formData, setFormData, styles }) => {
@@ -60,6 +60,31 @@ const MediaSection = ({ formData, setFormData, styles }) => {
     }));
   };
 
+  // Handles the video file selection
+  const handleVideoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData((prev) => ({
+        ...prev,
+        image: file,
+      }));
+    }
+  };
+
+  // Removes the selected video
+  const handleRemoveVideo = () => {
+    setFormData((prev) => ({
+      ...prev,
+      destination_video: null,
+    }));
+    // Also reset the file input
+    const fileInput = document.getElementById('video-upload');
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
+
+
   const renderImageGrid = (images, selectedImages, onToggle, type) => {
     if (isLoading) {
       return <p className="text-sm text-gray-500 italic">Loading images...</p>;
@@ -103,8 +128,39 @@ const MediaSection = ({ formData, setFormData, styles }) => {
 
       {formData.selected_destination ? (
         <>
-          {/* Thumbnail Selection Section */}
+          {/* Video Upload Section */}
           <div className="space-y-3">
+            <label className={`${labelStyle}`}>
+              <Video className="inline mr-1 text-muted-foreground" size={16} />
+              Upload a Video for {formData.selected_destination}
+            </label>
+            {formData.destination_video ? (
+              <div className="flex items-center gap-2 p-2 border rounded-md bg-gray-50">
+                <p className="text-sm font-medium text-gray-700 truncate">
+                  {formData.destination_video.name}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRemoveVideo}
+                  className="ml-auto cursor-pointer p-1 text-gray-500 hover:text-red-600"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <input
+                id="video-upload"
+                type="file"
+                accept="video/*"
+                onChange={handleVideoChange}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+              />
+            )}
+          </div>
+
+
+          {/* Thumbnail Selection Section */}
+          <div className="space-y-3 pt-4">
             <label className={labelStyle}>
               <ImageIcon className="inline mr-1 text-muted-foreground" size={16} />
               Select Thumbnail Images for {formData.selected_destination}

@@ -1,6 +1,11 @@
 import {
     UserPlus, LayoutList, CirclePlus, FileVideo2, FileText,
-    CreditCard, Ban, Images, MapPin, PencilLine, LayoutDashboard // <-- Import LayoutDashboard
+    CreditCard, Ban, Images, MapPin, PencilLine, LayoutDashboard,
+    Route,
+    Contact,
+    Building2,
+    Megaphone,
+    MailCheck
 } from "lucide-react";
 
 import ProfileImage from "@/assets/profile-image.jpg";
@@ -24,6 +29,16 @@ export const navbarLinks = [
         ],
     },
     {
+        title: "Leads",
+        links: [
+            
+            { label: "Plan Journey List", icon: Route, path: "/plan_journey_list" },
+            { label: "Contacts List", icon: Contact, path: "/contact_list" },
+            { label:"Suggestions", icon: Megaphone, path: "/suggestions" },
+            { label:"Subscribe", icon: MailCheck, path: "/subscribe" },
+        ],
+    },
+    {
         title: "Itineraries",
         links: [
             { label: "Create Itinerary", icon: CirclePlus, path: "/create_itinerary" },
@@ -41,7 +56,9 @@ export const navbarLinks = [
         title: "Destinations",
         links: [
             { label: "Create Destination", icon: MapPin, path: "/create_destination" },
+            { label: "Create City", icon: Building2, path: "/create_city" },
             { label: "Destination List", icon: LayoutList, path: "/destination_list" },
+
         ],
     },
     {

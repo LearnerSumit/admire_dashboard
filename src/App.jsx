@@ -22,6 +22,12 @@ import UploadVideoTestimonial from "./routes/uploadVideoTestiminal/page"
 import CreateBlog from "./routes/createblog/page";
 import BlogList from "./routes/bloglist/page";
 import UsersList from "./routes/userslist/page";
+import ContactUs from "./routes/leads/constact_us/page";
+import PlanYourJourney from "./routes/leads/plan_your_journey/page";
+import CreateCity from "./routes/create_city/page";
+import Suggestions from "./routes/leads/suggetion/page";
+import Subscribe from "./routes/leads/subscribe/page";
+import DestinationList from "./routes/destination_list/page";
 
 
 // It's good practice to have placeholder pages for login, unauthorized, etc.
@@ -104,6 +110,31 @@ function App() {
                             path: "users_list",
                             element: <UsersList />,
                         },
+                        {
+                            path: "suggestions",
+                            element: <Suggestions />,
+                        },
+                        {
+                            path: "subscribe",
+                            element: <Subscribe />,
+                        },
+                        {
+                            path: "contact_list",
+                            element: <ContactUs />,
+                        },
+                         {
+                            path: "plan_journey_list",
+                            element: <PlanYourJourney />,
+                        },
+                         {
+                            path: "create_city",
+                            element: <CreateCity />,
+                        },
+                        {
+                            path: "destination_list",
+                            element: <DestinationList />,
+                        },
+
                         {
                             // This nested route has specific role-based protection
                             element: <ProtectedRoute allowedRoles={['admin']} />,
