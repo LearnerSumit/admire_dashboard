@@ -1,46 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Pencil, Trash2, PlusCircle, Eye, EyeOff, ArrowRight, List } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { apiClient } from "../../stores/authStore";
+import { toast } from "react-toastify";
 
-// --- DUMMY DATA ---
-const dummyBlogs = [
-  {
-    id: 1,
-    title: "Understanding React Hooks",
-    description:
-      "Hooks let you use state and other React features without writing a class. Learn how to use useEffect, useState, and more.",
-    image: "https://placehold.co/600x400/7e5bef/ffffff?text=React+Hooks",
-    visibility: "public",
-  },
-  {
-    id: 2,
-    title: "Top 10 Travel Destinations",
-    description:
-      "Explore some of the most breathtaking travel destinations around the world for your 2025 adventures.",
-    image: "https://placehold.co/600x400/3498db/ffffff?text=Travel+2025",
-    visibility: "private",
-  },
-  {
-    id: 3,
-    title: "A Guide to Consistent UI Design",
-    description:
-      "Learn how to maintain a consistent and user-friendly design across your entire application.",
-    image: "https://placehold.co/600x400/2ecc71/ffffff?text=UI+Design",
-    visibility: "public",
-  },
-  {
-    id: 4,
-    title: "A Guide to Consistent UI Design",
-    description:
-      "Learn how to maintain a consistent and user-friendly design across your entire application.",
-    image: "https://placehold.co/600x400/2ecc71/ffffff?text=UI+Design",
-    visibility: "public",
-  },
-];
+
 
 
 // --- REDESIGNED BlogCard COMPONENT ---
 const BlogCard = ({ blog, onEdit, onDelete, onToggleVisibility }) => {
+
+
   return (
     <div className="group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-in-out">
       <div className="overflow-hidden relative">
@@ -62,7 +32,7 @@ const BlogCard = ({ blog, onEdit, onDelete, onToggleVisibility }) => {
           </button>
         </div>
         <img
-          src={blog.image}
+          src={blog.cover_image}
           alt={`Thumbnail for ${blog.title}`}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
@@ -81,19 +51,18 @@ const BlogCard = ({ blog, onEdit, onDelete, onToggleVisibility }) => {
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center">
           <button
             onClick={(e) => { e.stopPropagation(); onToggleVisibility(blog.id, blog.visibility); }}
-            className={`flex items-center gap-x-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${
-              blog.visibility === "public"
-                ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400"
-                : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
-            }`}
+            className={`flex items-center gap-x-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-colors ${blog.visibility === "public"
+              ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-400"
+              : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+              }`}
           >
             {blog.visibility === "public" ? <Eye size={14} /> : <EyeOff size={14} />}
             <span className="capitalize">{blog.visibility}</span>
           </button>
-           <a href="#" onClick={(e) => e.preventDefault()} className="inline-flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
-             Read More
-             <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
-           </a>
+          <a href="#" onClick={(e) => e.preventDefault()} className="inline-flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+            Read More
+            <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
+          </a>
         </div>
       </div>
     </div>
@@ -108,11 +77,29 @@ const BlogList = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call to fetch blogs
-    setTimeout(() => {
-      setBlogs(dummyBlogs);
-      setIsLoading(false);
-    }, 1500);
+    const fetchBlogs = async () => {
+      try {
+        setIsLoading(true);
+        const res = await apiClient.get("/admin/blog");
+
+        const data = res?.data?.blogData;
+
+        if (Array.isArray(data) && data.length > 0) {
+          setBlogs(data);
+          toast.success("Blogs loaded successfully.");
+        } else {
+          toast.info("No blogs found.");
+          setBlogs([]);
+        }
+      } catch (error) {
+        console.error("Error fetching blogs:", error);
+        toast.error("Failed to load blogs. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBlogs();
   }, []);
 
   const handleEdit = (id) => {
@@ -176,8 +163,8 @@ const BlogList = () => {
         ) : blogs.length === 0 ? (
           // --- No Itineraries Found ---
           <div className="text-center py-16 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl">
-             <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300">No Blog Posts Found</h3>
-             <p className="text-slate-500 mt-2">Get started by creating a new post.</p>
+            <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300">No Blog Posts Found</h3>
+            <p className="text-slate-500 mt-2">Get started by creating a new post.</p>
           </div>
         ) : (
           // --- Display Itineraries ---

@@ -19,7 +19,7 @@ import PaymentMode from "./routes/paymentmode/page";
 import CencellationMode from "./routes/cancellationpolicy/page";
 import HeroVideoUpload from "./routes/heroVideo/page";
 import UploadVideoTestimonial from "./routes/uploadVideoTestiminal/page"
-import CreateBlog from "./routes/createblog/page";
+import CreateBlog from "./routes/create_blog/page";
 import BlogList from "./routes/bloglist/page";
 import UsersList from "./routes/userslist/page";
 import ContactUs from "./routes/leads/constact_us/page";
