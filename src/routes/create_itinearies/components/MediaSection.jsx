@@ -13,14 +13,15 @@ const MediaSection = ({ formData, setFormData, styles }) => {
   useEffect(() => {
     const fetchImages = async () => {
       // If no destination is selected, clear images and return
-      if (!formData.selected_destination) {
+      if (!formData.selected_destination_id) {
         setGalleryImages([]);
         return;
       }
 
       try {
         setIsLoading(true);
-        const res = await apiClient.get(`/admin/image-Gallery/${formData.selected_destination}`);
+        const res = await apiClient.get(`/admin/image-Gallery/${formData.selected_destination_id}`);
+        console.log(res);
         // Set the fetched images to state
         setGalleryImages(res?.data?.imageGalleryData?.image || []);
       } catch (error) {
@@ -32,7 +33,7 @@ const MediaSection = ({ formData, setFormData, styles }) => {
     };
 
     fetchImages();
-  }, [formData.selected_destination]);
+  }, [formData.selected_destination_id]);
 
   // Toggles an image in the main destination_images array
   const handleImageToggle = (imgUrl) => {
@@ -126,7 +127,7 @@ const MediaSection = ({ formData, setFormData, styles }) => {
     <div className={`mt-8 space-y-6 ${cardStyle}`}>
       <h2 className="text-xl font-semibold border-b border-gray-700 pb-2">Media</h2>
 
-      {formData.selected_destination ? (
+      {formData.selected_destination_id ? (
         <>
           {/* Video Upload Section */}
           <div className="space-y-3">

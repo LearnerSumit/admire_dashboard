@@ -9,35 +9,31 @@ import {
 import { useEffect, useState } from "react";
 import { apiClient } from "../../../stores/authStore";
 import { toast } from "react-toastify";
-import { usePlaceStore } from "../../../stores/usePlaceStore";
 
 const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData }) => {
   const { cardStyle, labelStyle, inputStyle } = styles;
 
-  const {
-    destinationList
-  } = usePlaceStore();
   const [termsLoading, setTermsLoading] = useState(false);
 
-  const getIdByDestinationName = (name) => {
-    const destination = destinationList.find(dest => dest.destination_name === name);
-    return destination ? destination._id : null;
-  };
+  // highlight-start
+  // --- UPDATED: Simplified the function to rely only on formData ---
+  const fetchTermsContent = async () => {
+    const destinationId = formData.selected_destination_id;
+    // Guard clause to prevent API call if ID is missing
+    if (!destinationId) return;
 
-  const fetchTermsContent = async (destinationName) => {
-    const destinationId = getIdByDestinationName(destinationName);
     try {
       setTermsLoading(true);
       const res = await apiClient.get(`/admin/tnc/${destinationId}`);
 
-      console.log("res.data.destinationData.terms_and_conditions", res.data);
-
-      if (res.data.tnc.terms_And_condition) {
+      if (res.data?.tnc?.terms_And_condition) {
         setFormData((prev) => ({
           ...prev,
           terms_and_conditions: res.data.tnc.terms_And_condition,
         }));
       } else {
+        // If no terms are found, clear the field
+        setFormData((prev) => ({ ...prev, terms_and_conditions: "" }));
         toast.warning("No Terms & Conditions found for this destination.");
       }
     } catch (error) {
@@ -47,11 +43,13 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
       setTermsLoading(false);
     }
   };
+  // highlight-end
 
-  const fetchPaymentMode = async (destinationId) => {
+  const fetchPaymentMode = async (travelType) => {
     try {
       setTermsLoading(true);
-      const res = await apiClient.get(`/admin/payment-mode/${destinationId}`);
+      // This API endpoint seems to depend on travel_type, keeping it as is.
+      const res = await apiClient.get(`/admin/payment-mode/${travelType}`);
       if (res?.data?.destinationPaymentModeData?.payment_mode) {
         setFormData((prev) => ({
           ...prev,
@@ -84,22 +82,22 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
         toast.error("Failed to load cancellation policy.");
       }
     };
-
     fetchContent();
-  }, [formData.selected_destination]);
+  }, []);
 
-  // Run this when destination is selected/changed
   useEffect(() => {
-    if (formData.selected_destination) {
-      fetchTermsContent(formData.selected_destination);
+    if (formData.selected_destination_id) {
+      fetchTermsContent();
+    } else {
+      setFormData((prev) => ({ ...prev, terms_and_conditions: "" }));
     }
-  }, [formData.selected_destination]);
+  }, [formData.selected_destination_id]);
 
   useEffect(() => {
     if (formData.travel_type) {
       fetchPaymentMode(formData.travel_type);
     }
-  }, [formData.travel_type, formData.selected_destination]);
+  }, [formData.travel_type]);
 
   return (
     <div className={`${cardStyle} space-y-4`}>
@@ -172,7 +170,8 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
           value={formData.terms_and_conditions}
           onChange={handleInputChange}
           className={inputStyle}
-          placeholder="Specify your terms and conditions here..."
+          // Display loading text while fetching
+          placeholder={termsLoading ? "Loading T&C..." : "Terms and conditions will be auto-filled here."}
           readOnly
         ></textarea>
       </div>
@@ -190,7 +189,7 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
           value={formData.payment_mode || ""}
           onChange={handleInputChange}
           className={inputStyle}
-          placeholder="e.g., Online payment, Cash on arrival"
+          placeholder="Payment mode will be auto-filled here."
           readOnly
         ></textarea>
       </div>
@@ -208,7 +207,7 @@ const DescriptionsSection = ({ formData, handleInputChange, styles, setFormData 
           value={formData.cancellation_policy || ""}
           onChange={handleInputChange}
           className={inputStyle}
-          placeholder="e.g., 100% refund 7 days prior to trip"
+          placeholder="Cancellation policy will be auto-filled here."
           readOnly
         ></textarea>
       </div>

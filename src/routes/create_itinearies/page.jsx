@@ -20,6 +20,7 @@ const CreateItineriesPage = () => {
     itinerary_type: "flexible",
     duration: "",
     selected_destination: "",
+    selected_destination_id: "",
     itinerary_theme: ["Family"],
     classification: ["Trending"],
     destination_detail: "",
@@ -36,7 +37,7 @@ const CreateItineriesPage = () => {
     days_information: [{ day: "1", locationName: "", locationDetail: "" }],
   });
 
-  console.log("console in Itinerary Page:---> ", formData);
+  console.log("console in FormData:---> ", formData);
 
  
 

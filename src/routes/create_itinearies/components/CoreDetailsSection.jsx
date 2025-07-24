@@ -8,15 +8,11 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
   const themes = ['Family', 'Honeymoon', 'Adventures', 'Solo'];
   const classification_types = ['Trending', 'Exclusive'];
 
-
-  // highlight-start
-  // Updated to use the primary state and actions from the store
   const {
     destinationList,
     fetchDestinationList,
     isListLoading
   } = usePlaceStore();
-  // highlight-end
 
   const handleThemeChange = (e) => {
     const { value, checked } = e.target;
@@ -34,8 +30,39 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
 
   const handleTravelTypeChange = (e) => {
     handleInputChange({ target: { name: 'travel_type', value: e.target.value } });
-    handleInputChange({ target: { name: 'selected_destination', value: '' } });
+    // highlight-start
+    // When travel type changes, reset both destination ID and name
+    handleInputChange({ target: { name: 'selected_destination_id', value: '' } });
+    handleInputChange({ target: { name: 'selected_destination_name', value: '' } });
+    // highlight-end
   };
+
+  // highlight-start
+  // --- NEW: Handler for destination selection ---
+  const handleDestinationChange = (e) => {
+    const selectedId = e.target.value;
+    const selectedDestination = destinationList.find(dest => dest._id === selectedId);
+
+    // Get the name from the found destination, or set to empty string if not found
+    const selectedName = selectedDestination ? selectedDestination.destination_name : '';
+
+    // Update the ID in the form data
+    handleInputChange({
+      target: {
+        name: 'selected_destination_id',
+        value: selectedId,
+      },
+    });
+
+    // Update the name in the form data
+    handleInputChange({
+      target: {
+        name: 'selected_destination_name',
+        value: selectedName,
+      },
+    });
+  };
+  // highlight-end
 
   const handleClassificationChange = (e) => {
     const { value, checked } = e.target;
@@ -51,13 +78,11 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
     });
   };
 
-
   // Effect to fetch the destination list when the travel type changes
   useEffect(() => {
     async function fetchPlacesData() {
       if (formData.travel_type) {
         await fetchDestinationList(formData.travel_type);
-        // highlight-end
       }
     }
 
@@ -119,32 +144,31 @@ const CoreDetailsSection = ({ formData, handleInputChange, styles }) => {
             </label>
           </div>
 
-          <label htmlFor="selected_destination" className={`${labelStyle} mt-4 block`}>
+          <label htmlFor="selected_destination_id" className={`${labelStyle} mt-4 block`}>
             <MapPin className="inline mr-2 text-muted-foreground" size={16} /> Destination
           </label>
+          {/* highlight-start */}
+          {/* --- UPDATED: Destination dropdown --- */}
           <select
-            name="selected_destination"
-            id="selected_destination"
-            value={formData.selected_destination}
-            onChange={handleInputChange}
+            name="selected_destination_id"
+            id="selected_destination_id"
+            value={formData.selected_destination_id}
+            onChange={handleDestinationChange} // Use the new handler
             className={inputStyle}
-            // highlight-start
-            // Disable dropdown while the list is loading
             disabled={isListLoading}
-            // highlight-end
             required
           >
-            {/* highlight-start */}
-            {/* Show loading text while fetching */}
             <option value="">
               {isListLoading ? "Loading..." : "-- Select Destination --"}
             </option>
-            {/* Map over the primary destinationList */}
+            {/* The value is now the place._id for precise lookups */}
             {destinationList.map((place) => (
-              <option key={place._id} value={place.destination_name}>{place.destination_name}</option>
+              <option key={place._id} value={place._id}>
+                {place.destination_name}
+              </option>
             ))}
-            {/* highlight-end */}
           </select>
+          {/* highlight-end */}
         </div>
 
         {/* Duration */}
