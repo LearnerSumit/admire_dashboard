@@ -14,8 +14,6 @@ const ImageGallery = () => {
     const [isUploading, setIsUploading] = useState(false); // Changed name for clarity
 
     // --- Zustand store integration ---
-    // highlight-start
-    // Updated to use the primary state and actions
     const { 
         destinationList, 
         fetchDestinationList, 
@@ -26,13 +24,11 @@ const ImageGallery = () => {
 
     // Effect to fetch places when travel type changes
     useEffect(() => {
-        // highlight-start
-        // Calling the primary fetch action
         fetchDestinationList(travelType);
         // highlight-end
-    }, [travelType, fetchDestinationList]); // Updated dependency
+    }, [travelType, fetchDestinationList]); 
 
-    // Handler for file input changes
+
     const handleImageChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
         if (selectedFiles.length + images.length > 20) {
@@ -71,7 +67,7 @@ const ImageGallery = () => {
         setIsUploading(true);
 
         const formData = new FormData();
-        formData.append("destination", selectedPlace);
+        formData.append("destination_id", selectedPlace);
         images.forEach((imageFile) => {
             formData.append("image", imageFile);
         });
@@ -86,11 +82,7 @@ const ImageGallery = () => {
 
             console.log("Upload successful:", response.data);
             toast.success("Images uploaded successfully!");
-
-            // Reset form state
             setImages([]);
-            // Optionally reset the selected place as well
-            // setSelectedPlace("");
 
         } catch (error) {
             if (error.response) {
@@ -148,22 +140,16 @@ const ImageGallery = () => {
                         value={selectedPlace}
                         onChange={handlePlaceChange}
                         className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                        // highlight-start
-                        // Disable the dropdown while the destination list is loading
+                     
                         disabled={isListLoading}
-                        // highlight-end
                         required
                     >
-                        {/* highlight-start */}
-                        {/* Show a loading state to the user */}
                         <option value="">
                             {isListLoading ? "Loading..." : "-- Select a Destination --"}
                         </option>
-                        {/* Map over the primary destinationList */}
                         {destinationList.map((place) => (
-                            <option key={place._id} value={place.destination_name}>{place.destination_name}</option>
+                            <option key={place._id} value={place._id}>{place.destination_name}</option>
                         ))}
-                        {/* highlight-end */}
                     </select>
                 </div>
 

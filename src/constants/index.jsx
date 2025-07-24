@@ -50,6 +50,8 @@ export const navbarLinks = [
         links: [
             { label: "Customer Gallery", icon: Images, path: "/customer_gallery" },
             { label: "Image Gallery", icon: Images, path: "/image_gallery" },
+            { label: "View Image Gallery", icon: Images, path: "/view_image_gallery" },
+
         ],
     },
     {

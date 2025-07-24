@@ -33,6 +33,7 @@ import ImageGallery from "./routes/image_gallery/page";
 
 // stores
 import useAuthStore from "./stores/authStore";
+import ViewImageGallery from "./routes/view_image_gallery/page";
 
 
 function App() {
@@ -78,6 +79,11 @@ function App() {
                             path: "image_gallery",
                             element: <ImageGallery />,
                         },
+                         {
+                            path: "view_image_gallery",
+                            element: <ViewImageGallery />,
+                        },
+
                         {
                             path: "customer_gallery",
                             element: <CustomerGallery />,
