@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { Loader2, FileText, Edit, Save } from "lucide-react";
 import { apiClient } from "../../stores/authStore";
 
-const CancellationMode = () => {
+const CancellationPolicy = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,4 +121,4 @@ const CancellationMode = () => {
   );
 };
 
-export default CancellationMode;
+export default CancellationPolicy;

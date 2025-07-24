@@ -4,33 +4,35 @@ import { ThemeProvider } from "@/contexts/theme-context";
 
 import Layout from "./routes/layout";
 import DashboardPage from "./routes/dashboard/page";
-import CreateItineriesPage from "./routes/create/page";
-import ItineriesListPage from "./routes/Itinerarys/page";
-import ImageGallery from "./routes/image_gallery/page";
-import CreateDestination from "./routes/createDestination/page";
 import LoginPage from "./loginPage/page";
 import UnauthorizedPage from "./unauthorizedPage/page";
 import ProtectedRoute from "./components/ProtectedRoute";
-import AddUser from "./routes/addUser/page";
-import useAuthStore from "./stores/authStore";
+
+
+// all routes are imported here
+import CreateItineriesPage from "./routes/create_itinearies/page";
+import ItinerariesListPage from "./routes/itinerarys_list/page";
 import CustomerGallery from "./routes/customer_gallery/page";
-import TermsAndCondition from "./routes/termsandcondition/page";
-import PaymentMode from "./routes/paymentmode/page";
-import CencellationMode from "./routes/cancellationpolicy/page";
-import HeroVideoUpload from "./routes/heroVideo/page";
-import UploadVideoTestimonial from "./routes/uploadVideoTestiminal/page"
+import TermsAndCondition from "./routes/terms_and_condition/page";
+import PaymentMode from "./routes/payment_mode/page";
+import CancellationPolicy from "./routes/cancellation_policy/page";
+import HeroVideoUpload from "./routes/hero_video/page";
+import UploadVideoTestimonial from "./routes/upload_video_testiminal/page";
 import CreateBlog from "./routes/create_blog/page";
-import BlogList from "./routes/bloglist/page";
-import UsersList from "./routes/userslist/page";
+import BlogList from "./routes/blog_list/page";
+import UsersList from "./routes/users_list/page";
+import Suggestions from "./routes/leads/suggetion/page";
+import Subscribe from "./routes/leads/subscribe/page";
 import ContactUs from "./routes/leads/constact_us/page";
 import PlanYourJourney from "./routes/leads/plan_your_journey/page";
 import CreateCity from "./routes/create_city/page";
-import Suggestions from "./routes/leads/suggetion/page";
-import Subscribe from "./routes/leads/subscribe/page";
 import DestinationList from "./routes/destination_list/page";
+import CreateDestination from "./routes/create_destination/page";
+import AddUser from "./routes/add_user/page";
+import ImageGallery from "./routes/image_gallery/page";
 
-
-// It's good practice to have placeholder pages for login, unauthorized, etc.
+// stores
+import useAuthStore from "./stores/authStore";
 
 
 function App() {
@@ -40,6 +42,8 @@ function App() {
     useEffect(() => {
         checkAuthOnLoad();
     }, [checkAuthOnLoad]);
+
+
     const router = createBrowserRouter([
         {
             // Public routes that do not require authentication
@@ -68,7 +72,7 @@ function App() {
                         },
                         {
                             path: "itinerary_list",
-                            element: <ItineriesListPage />,
+                            element: <ItinerariesListPage />,
                         },
                         {
                             path: "image_gallery",
@@ -88,7 +92,7 @@ function App() {
                         },
                         {
                             path: "cancellation_policy",
-                            element: <CencellationMode />,
+                            element: <CancellationPolicy />,
                         },
                         {
                             path: "hero_video",
@@ -122,11 +126,11 @@ function App() {
                             path: "contact_list",
                             element: <ContactUs />,
                         },
-                         {
+                        {
                             path: "plan_journey_list",
                             element: <PlanYourJourney />,
                         },
-                         {
+                        {
                             path: "create_city",
                             element: <CreateCity />,
                         },
