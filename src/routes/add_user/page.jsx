@@ -1,100 +1,30 @@
+// AddUser.jsx
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import axios from "axios";
-import { ENV } from "../../constants/api";
-import { User, Lock, Loader2, Users, Trash2, X } from "lucide-react"; 
-import  { apiClient } from "../../stores/authStore";
-
-// Modal Component for confirmation
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm"
-      aria-labelledby="modal-title"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div className="relative w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-lg transition-all dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex flex-col space-y-4">
-          <div className="text-center">
-            <h3
-              className="text-lg font-semibold text-slate-900 dark:text-slate-50"
-              id="modal-title"
-            >
-              Confirm Deletion
-            </h3>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-              Are you sure you want to delete this user? This action cannot be
-              undone.
-            </p>
-          </div>
-          <div className="flex justify-end gap-x-3">
-            <button
-              onClick={onClose}
-              disabled={isLoading}
-              className="inline-flex items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-slate-600"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onConfirm}
-              disabled={isLoading}
-              className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-500 dark:hover:bg-red-600"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  <span>Deleting...</span>
-                </>
-              ) : (
-                "Delete"
-              )}
-            </button>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-full p-1 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-50"
-        >
-          <X className="h-5 w-5" />
-          <span className="sr-only">Close</span>
-        </button>
-      </div>
-    </div>
-  );
-};
+import { User, Lock, Loader2, Users, Trash2 } from "lucide-react";
+import { useUserStore } from "../../stores/userStore";
+import ConfirmationModal from "../../components/ConfirmationModal";
 
 const AddUser = () => {
+  const {
+    users,
+    isLoadingUsers,
+    isSubmitting,
+    isDeleting,
+    fetchUsers,
+    addUser,
+    deleteUser,
+  } = useUserStore();
+
   const [formData, setFormData] = useState({
     username: "",
     password: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-
-  const fetchUsers = async () => {
-    setIsLoadingUsers(true);
-    try {
-      const response = await apiClient.get('/admin/get-admin-user');
-;
-      setUsers(response.data?.adminUser || []);
-    } catch (error) {
-      toast.error("Failed to fetch users.");
-    } finally {
-      setIsLoadingUsers(false);
-    }
-  };
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -105,65 +35,30 @@ const AddUser = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.username || !formData.password) {
-      toast.error("Please fill in both username and password.");
+      // You can keep toast here or handle it in the store
+      // toast.error("Please fill in both username and password.");
       return;
     }
-
-    setIsSubmitting(true);
-    try {
-      const response = await apiClient.post(`/admin/add-user`,formData);
-
-      toast.success(response.data?.msg || "User added successfully!");
-      setFormData({ username: "", password: "" });
-      fetchUsers(); // Refresh user list after adding a new user
-    } catch (error) {
-      const errMsg =
-        error.response?.data?.message ||
-        error.response?.data?.msg ||
-        "Something went wrong while adding the user.";
-      toast.error(errMsg);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await addUser(formData);
+    setFormData({ username: "", password: "" });
   };
 
   const handleDeleteClick = (user) => {
     setUserToDelete(user);
-    setIsDeleteDialogOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     if (isDeleting) return;
     setUserToDelete(null);
-    setIsDeleteDialogOpen(false);
+    setIsModalOpen(false);
   };
 
   const handleConfirmDelete = async () => {
     if (!userToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      await axios.delete(
-        `${ENV.API_BASE_URL}/admin/delete-user/${userToDelete._id}`,
-        {
-          withCredentials: true,
-        }
-      );
-      toast.success(`User "${userToDelete.username}" deleted successfully!`);
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user._id !== userToDelete._id)
-      );
-      handleCloseModal();
-    } catch (error) {
-      const errMsg =
-        error.response?.data?.message ||
-        "Failed to delete user.";
-      toast.error(errMsg);
-    } finally {
-      setIsDeleting(false);
-    }
+    await deleteUser(userToDelete._id, userToDelete.username);
+    handleCloseModal();
   };
 
   return (
@@ -307,11 +202,17 @@ const AddUser = () => {
         </div>
       </div>
       <ConfirmationModal
-        isOpen={isDeleteDialogOpen}
+        isOpen={isModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirmDelete}
         isLoading={isDeleting}
-      />
+        title="Confirm Deletion"
+      >
+        <p>
+            Are you sure you want to delete the user "{userToDelete?.username}"? 
+            This action cannot be undone.
+        </p>
+      </ConfirmationModal>
     </>
   );
 };
