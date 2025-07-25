@@ -59,7 +59,7 @@ export const navbarLinks = [
         links: [
             { label: "Create Destination", icon: MapPin, path: "/create_destination" },
             { label: "Create City", icon: Building2, path: "/create_city" },
-            { label: "Destination List", icon: LayoutList, path: "/destination_list" },
+            // { label: "Destination List", icon: LayoutList, path: "/destination_list" },
 
         ],
     },
