@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { usePlaceStore } from "../../stores/usePlaceStore";
-import { UploadCloud, X } from "lucide-react";
+import { AppleIcon, UploadCloud, X } from "lucide-react";
+import { apiClient } from "../../stores/authStore";
+import { toast } from "react-toastify";
 
 // An array of available categories. This could also be fetched from an API.
 const AVAILABLE_CATEGORIES = ["Trending", "Exclusive", "Popular", "New"];
@@ -46,10 +48,14 @@ const CreateCity = () => {
   const [isCityListLoading, setIsCityListLoading] = useState(false);
   const [selectedCityId, setSelectedCityId] = useState("");
 
+
   // --- Form Input States ---
   const [cityName, setCityName] = useState("");
   const [categories, setCategories] = useState([]);
   const [visibility, setVisibility] = useState("public");
+
+  console.log("Selected City category:", categories);
+
   
   // State for new image files to be uploaded
   const [newImageFiles, setNewImageFiles] = useState([]);
@@ -137,8 +143,9 @@ const CreateCity = () => {
     const getCities = async () => {
       setIsCityListLoading(true);
       try {
-        const cities = await fetchCitiesByState(selectedState);
-        setCityList(cities);
+        const cities = await apiClient.get(`/admin/state/${selectedState}`);
+        // console.log("Fetched cities:", cities);
+        setCityList(cities.data.citiesData || []);
       } catch (error) {
         console.error("Failed to fetch cities:", error);
         setCityList([]);
@@ -155,12 +162,13 @@ const CreateCity = () => {
       return;
     }
     const getCityDetails = async () => {
-      const details = await fetchCityDetails(selectedCityId);
-      if (details) {
-        setCityName(details.cityName);
-        setCategories(details.categories);
-        setVisibility(details.visibility);
-        setExistingImages(details.images || []); // Populate existing images
+      const details = await apiClient.get(`/admin/city/${selectedCityId}`);
+      console.log("Fetched city details:", details);
+      if (details.data.cityData) {
+        setCityName(details.data.cityData.city_name);
+        setCategories(details.data.cityData.city_category);
+        setVisibility(details.data.cityData.visibility);
+        setExistingImages(details.data.cityData.city_image || []); // Populate existing images
         setNewImageFiles([]); // Clear any staged new images
       }
     };
@@ -178,14 +186,17 @@ const CreateCity = () => {
 
     // Use FormData for multipart/form-data, required for file uploads
     const formData = new FormData();
-    formData.append("cityName", cityName);
+    formData.append("city_name", cityName);
     formData.append("visibility", visibility);
-    formData.append("categories", JSON.stringify(categories)); // Send array as JSON string
+    formData.append("city_category", JSON.stringify(categories)); // Send array as JSON string
+    
     
     // Append new image files to the form data
     newImageFiles.forEach(file => {
-      formData.append("newImages", file);
+      formData.append("image", file);
     });
+
+
 
     if (isUpdateMode) {
       // --- UPDATE LOGIC ---
@@ -198,17 +209,20 @@ const CreateCity = () => {
       alert(`City with ID ${selectedCityId} updated successfully!`);
     } else {
       // --- CREATE LOGIC ---
-      formData.append("parentStateId", selectedState);
-      
-      console.log("CREATING new city with FormData...");
-      // Example: await fetch('/api/cities', { method: 'POST', body: formData });
-      alert(`New city created successfully in state ${selectedState}!`);
+      formData.append("id", selectedState);
+
+      console.log("form data in ceate city:-->", formData);
+
+      const res = await apiClient.post("/admin/city", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      if(res){
+        toast.success("City created successfully!");
+      }
+
       resetFormFields();
-    }
-    
-    // Log FormData entries for debugging
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
     }
   };
   
@@ -272,7 +286,7 @@ const CreateCity = () => {
             <label htmlFor="citySelect" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Select City (Optional)</label>
             <select id="citySelect" value={selectedCityId} onChange={handleCityChange} className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-3 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-50" disabled={!selectedState || isCityListLoading}>
               <option value="">{isCityListLoading ? "Loading..." : "-- Select to Edit --"}</option>
-              {cityList.map((city) => <option key={city._id} value={city._id}>{city.city_name}</option>)}
+              {cityList?.map((city) => <option key={city._id} value={city._id}>{city.city_name}</option>)}
             </select>
           </div>
         </div>
