@@ -111,7 +111,7 @@ const CustomerGallery = () => {
     setIsDeleting(true);
     try {
       // Always send an array of IDs to the backend
-      await apiClient.delete("/admin/customer-gallery", {
+      await apiClient.delete("/admin/customer-gallery/delete", {
         data: { imageIds: imageIds },
       });
 
