@@ -1,27 +1,11 @@
-import { useState, useCallback, useMemo, useRef } from "react";
+import  { useState, useEffect } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { UploadCloud, PlusCircle, Blinds, Eye } from "lucide-react";
+import { UploadCloud, PlusCircle, Blinds, Eye, Edit, Loader2 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
-import { useDebouncedCallback } from 'use-debounce';
-import { apiClient } from "../../stores/authStore";
-import { toast } from 'react-toastify';
+import { useParams, useNavigate } from "react-router-dom";
+import { useBlogStore } from "../../stores/blogStore";
 
-// OPTIMIZATION: Define constants outside the component so they are not recreated on every render.
-const modules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    [{ list: "ordered" }, { list: "bullet" }, { indent: "-1" }, { indent: "+1" }],
-    ["link", "image"],
-    ["clean"],
-  ],
-};
-
-const formats = [
-  "header", "bold", "italic", "underline", "strike", "blockquote",
-  "list", "bullet", "indent", "link", "image",
-];
 
 const inputStyle = "block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500";
 const labelStyle = "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
@@ -29,111 +13,120 @@ const labelStyle = "block text-sm font-medium text-gray-700 dark:text-gray-300 m
 
 const CreateBlog = () => {
   const { theme } = useTheme();
+  const navigate = useNavigate();
+  const { id } = useParams(); // Get blog ID from URL if it exists
+  const isEditMode = Boolean(id);
 
-  const quillRef = useRef();
+  // Get state and actions from the Zustand store
+  const { 
+      isLoading,
+      isFetchingDetails,
+      blogToEdit, 
+      createBlog, 
+      updateBlog, 
+      fetchBlogById,
+      clearBlogToEdit 
+    } = useBlogStore();
 
-  const [blogData, setBlogData] = useState({
-    title: "",
-    content: "",
-    coverImage: null,
-    visibility: "private",
-  });
+    // Add this before the component
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link", "image"],
+    ["clean"],
+  ],
+};
 
-  // OPTIMIZATION: Wrap handlers in useCallback to stabilize their references.
-  // This prevents child components from re-rendering if they receive these functions as props.
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setBlogData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  }, []); // Empty dependency array means the function is created only once.
+const formats = [
+  "header",
+  "bold", "italic", "underline", "strike",
+  "list", "bullet",
+  "link", "image"
+];
 
-  // OPTIMIZATION: Debounce the content change handler.
-  // This waits for the user to stop typing for 300ms before updating state,
-  // preventing a flood of re-renders on every keystroke in the editor.
-  const handleContentChange = useDebouncedCallback((content) => {
-    setBlogData((prevData) => ({
-      ...prevData,
-      content,
-    }));
-  }, 300);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [coverImage, setCoverImage] = useState(null);
+  const [visibility, setVisibility] = useState("private");
+  const [imagePreview, setImagePreview] = useState("");
 
-  const handleFileChange = useCallback((e) => {
-    if (e.target.files && e.target.files[0]) {
-      setBlogData((prevData) => ({
-        ...prevData,
-        coverImage: e.target.files[0],
-      }));
+  // Effect to fetch blog data if in edit mode
+  useEffect(() => {
+    if (isEditMode) {
+      fetchBlogById(id);
     }
-  }, []);
+    // Cleanup function to clear data when component unmounts
+    return () => {
+        clearBlogToEdit();
+    };
+  }, [id, isEditMode, fetchBlogById, clearBlogToEdit]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // This is where you would format your data for API submission,
-    // e.g., using FormData for the file upload.
-    const formData = new FormData();
-    formData.append('title', blogData.title);
-    formData.append('content', blogData.content);
-    formData.append('visibility', blogData.visibility);
-    if (blogData.coverImage) {
-      formData.append('coverImage', blogData.coverImage);
+  // Effect to populate form when blogToEdit data arrives
+  useEffect(() => {
+    if (isEditMode && blogToEdit) {
+      setTitle(blogToEdit.title || "");
+      setContent(blogToEdit.content || "");
+      setVisibility(blogToEdit.visibility || "private");
+      setImagePreview(blogToEdit.cover_image || "");
+      setCoverImage(null); // Reset file input
     }
+  }, [blogToEdit, isEditMode]);
 
-    try {
-      const res = await apiClient.post('/admin/blog', formData);
-      if (res.data.success) {
-        toast.success(res.data.msg);
-        setBlogData({
-          title: "",
-          content: "",
-          coverImage: null,
-          visibility: "private",
-        });
-      } else {
-        toast.error(res.data.message);
-      }
-    } catch (error) {
-      console.error('Error creating blog:', error);
-      toast.error('Failed to create blog.');
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  // OPTIMIZATION: Memoize the ReactQuill component to prevent re-renders
-  // when other parts of the form (like the title input) are updated.
-  const MemoizedQuill = useMemo(() => (
-    <ReactQuill
-      ref={quillRef}
-      theme="snow"
-      value={blogData.content}
-      onChange={handleContentChange}
-      modules={modules}
-      formats={formats}
-      placeholder="Write your blog content here..."
-      className={theme === 'dark' ? 'quill-dark' : ''}
-    />
-  ), [theme, blogData.content, handleContentChange]); // Re-render only if these dependencies change.
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    formData.append('visibility', visibility);
+    if (coverImage) {
+      formData.append('coverImage', coverImage);
+    }
+    
+    if (isEditMode) {
+      await updateBlog(id, formData, navigate);
+    } else {
+      await createBlog(formData, navigate);
+    }
+  };
+
+  if (isFetchingDetails) {
+    return (
+        <div className="flex items-center justify-center min-h-[50vh]">
+            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+            <p className="ml-3 text-lg">Loading Blog Details...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-y-4">
-      <h1 className="title">Create a New Blog Post</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-y-6">
+      <h1 className="title flex items-center gap-x-2">
+        {isEditMode ? <Edit size={24}/> : <PlusCircle size={24}/>}
+        {isEditMode ? "Edit Blog Post" : "Create a New Blog Post"}
+      </h1>
 
-        {/* Title & Visibility Card */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-y-6">
         <div className="card">
           <div className="card-header"><p className="card-title">Blog Details</p></div>
           <div className="card-body grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="title" className={labelStyle}>
-                <Blinds className="inline mr-2 text-muted-foreground" size={16} /> Title
-              </label>
-              <input type="text" name="title" id="title" placeholder="Enter Blog Title" value={blogData.title} onChange={handleChange} className={inputStyle} required />
+              <label htmlFor="title" className={labelStyle}><Blinds className="inline mr-2" size={16} /> Title</label>
+              <input type="text" name="title" id="title" placeholder="Enter Blog Title" value={title} onChange={(e) => setTitle(e.target.value)} className={inputStyle} required />
             </div>
             <div>
-              <label htmlFor="visibility" className={labelStyle}>
-                <Eye className="inline mr-2 text-muted-foreground" size={16} /> Visibility
-              </label>
-              <select name="visibility" id="visibility" value={blogData.visibility} onChange={handleChange} className={inputStyle} required>
+              <label htmlFor="visibility" className={labelStyle}><Eye className="inline mr-2" size={16} /> Visibility</label>
+              <select name="visibility" id="visibility" value={visibility} onChange={(e) => setVisibility(e.target.value)} className={inputStyle} required>
                 <option value="public">Public</option>
                 <option value="private">Private</option>
               </select>
@@ -141,42 +134,33 @@ const CreateBlog = () => {
           </div>
         </div>
 
-        {/* Cover Image Upload */}
         <div className="card">
           <div className="card-header"><p className="card-title">Cover Image</p></div>
           <div className="card-body">
-            <div className="flex items-center justify-center w-full">
-              <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:hover:bg-bray-800 dark:bg-slate-950 hover:bg-slate-100 dark:border-slate-600 dark:hover:border-slate-500 dark:hover:bg-slate-900">
+            <label htmlFor="dropzone-file" className="relative flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:border-slate-600 dark:hover:border-slate-500 dark:hover:bg-slate-900">
+              {imagePreview ? (
+                <img src={imagePreview} alt="Cover preview" className="absolute inset-0 w-full h-full object-cover rounded-lg"/>
+              ) : (
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <UploadCloud className="w-10 h-10 mb-3 text-slate-400" />
-                  <p className="mb-2 text-sm text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold">Click to upload</span> or drag and drop
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">SVG, PNG, JPG or GIF</p>
-                  {blogData.coverImage && <p className="mt-2 text-sm text-blue-500">{blogData.coverImage.name}</p>}
+                  <p className="mb-2 text-sm text-slate-500 dark:text-slate-400"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">PNG, JPG, or GIF</p>
                 </div>
-                <input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
-              </label>
-            </div>
+              )}
+               <input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
+            </label>
+            {coverImage && <p className="mt-2 text-sm text-blue-500">New image selected: {coverImage.name}</p>}
           </div>
         </div>
 
-        {/* Blog Content Editor */}
-        <div className="w-full border bg-slate-50 dark:bg-slate-950 border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden shadow-sm">
-          <div className="bg-slate-100 dark:bg-slate-800 px-4 py-2 border-b border-slate-300 dark:border-slate-700">
-            <p className="text-base font-semibold text-slate-800 dark:text-slate-200">Blog Content</p>
-          </div>
-          <div className="p-4">
-            {/* Render the memoized editor */}
-            {MemoizedQuill}
-          </div>
+        <div>
+          <ReactQuill theme="snow" value={content} onChange={setContent} modules={modules} formats={formats} placeholder="Write your blog content here..." className={theme === 'dark' ? 'quill-dark' : ''} />
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end">
-          <button type="submit" className="bg-blue-600 p-2 rounded-md text-white flex items-center gap-x-2">
-            <PlusCircle size={20} />
-            Publish Post
+          <button type="submit" disabled={isLoading} className="bg-blue-600 p-2 rounded-md text-white flex items-center gap-x-2 disabled:bg-blue-400">
+            {isLoading ? <Loader2 size={20} className="animate-spin" /> : (isEditMode ? <Edit size={20} /> : <PlusCircle size={20} />)}
+            {isLoading ? 'Saving...' : (isEditMode ? 'Update Post' : 'Publish Post')}
           </button>
         </div>
       </form>

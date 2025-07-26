@@ -79,7 +79,7 @@ function App() {
                             path: "image_gallery",
                             element: <ImageGallery />,
                         },
-                         {
+                        {
                             path: "view_image_gallery",
                             element: <ViewImageGallery />,
                         },
@@ -110,6 +110,10 @@ function App() {
                         },
                         {
                             path: "create_blog",
+                            element: <CreateBlog />,
+                        },
+                        {
+                            path: "create_blog/:id",
                             element: <CreateBlog />,
                         },
                         {

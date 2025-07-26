@@ -1,13 +1,12 @@
 import { useRef, useState } from "react";
-import { Loader2, Video, X, Replace, LayoutTemplate } from "lucide-react";
+import { Loader2, Video, X, Replace, LayoutTemplate, Eye, Lock } from "lucide-react";
 import { toast } from "react-toastify";
 import { apiClient } from "../../stores/authStore";
-
-
 
 const HeroVideoUpload = () => {
   const [video, setVideo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [visibility, setVisibility] = useState("public");
 
   // Refs for form fields
   const pageRef = useRef();
@@ -41,8 +40,9 @@ const HeroVideoUpload = () => {
     }
 
     const formData = new FormData();
-    formData.append("video", video);
-    formData.append("title", page); // Additional field
+    formData.append("image", video);
+    formData.append("title", page);
+    formData.append("visibility", visibility); // Use state for visibility
 
     try {
       setIsLoading(true);
@@ -50,11 +50,12 @@ const HeroVideoUpload = () => {
       const response = await apiClient.post("/admin/hero-section", formData);
 
       if (response.data.success) {
-        toast.success(response.data.message || "Video uploaded successfully!");
+        toast.success(response.data.msg || "Video uploaded successfully!");
         handleRemoveVideo();
         pageRef.current.value = "home";
+        setVisibility("public"); // Reset visibility on success
       } else {
-        toast.error(response.data.message || "Upload failed. Please try again.");
+        toast.error(response.data.msg || "Upload failed. Please try again.");
       }
     } catch (error) {
       console.error("Video Upload Error:", error);
@@ -64,6 +65,11 @@ const HeroVideoUpload = () => {
     }
   };
 
+  const inputStyle =
+    "block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500";
+  const labelStyle =
+    "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1";
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-6 sm:p-10">
       <form
@@ -71,12 +77,12 @@ const HeroVideoUpload = () => {
         className="max-w-3xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 space-y-8 border border-gray-200 dark:border-gray-700"
       >
         <h1 className="text-3xl font-bold border-b pb-3 border-gray-300 dark:border-gray-600">
-          Update Hero Video
+          Manege All Page Hero Video
         </h1>
 
         {/* Page Dropdown */}
         <div>
-          <label htmlFor="page" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="page" className={labelStyle}>
             <span className="inline-flex items-center gap-1">
               <LayoutTemplate size={16} /> Select Page
             </span>
@@ -85,7 +91,7 @@ const HeroVideoUpload = () => {
             ref={pageRef}
             id="page"
             defaultValue="home"
-            className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 p-2 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className={inputStyle}
             required
           >
             <option value="home">Home</option>
@@ -94,6 +100,29 @@ const HeroVideoUpload = () => {
             <option value="international">International</option>
             <option value="contact">Contact</option>
             <option value="blog">Blog</option>
+          </select>
+        </div>
+
+        {/* Visibility Dropdown */}
+        <div>
+          <label htmlFor="visibility" className={labelStyle}>
+            <span className="inline-flex items-center gap-1">
+              <Eye size={16} /> Visibility
+            </span>
+          </label>
+          <select
+            id="visibility"
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className={inputStyle}
+            required
+          >
+            <option value="public" className="flex items-center">
+              <Eye size={16} className="mr-2" /> Public
+            </option>
+            <option value="private" className="flex items-center">
+              <Lock size={16} className="mr-2" /> Private
+            </option>
           </select>
         </div>
 
